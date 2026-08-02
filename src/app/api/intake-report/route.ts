@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { REPORT_INTAKE_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
-import type { ChildProfile, ProfileInsight, Subject } from "@/lib/types";
+import type { Briefing, ChildProfile, ProfileInsight, Subject } from "@/lib/types";
 import type Anthropic from "@anthropic-ai/sdk";
 
 type TaggedInsight = { text: string; subject?: string };
@@ -112,6 +112,41 @@ export async function POST(request: Request) {
       })
       .eq("id", childId);
     if (updateError) throw updateError;
+
+    // A graded assignment is subject-scoped (unlike the general Profile intake) and the
+    // Homework subject page's "Past assignments" list reads only from `sessions` — without
+    // this, an assignment intake would show up in Progress (strengths/growth_areas) but
+    // never in that subject's own history, which is exactly the mismatch this fixes.
+    if (intakeType === "assignment" && safeSubject !== "general") {
+      const highlights = [...newStrengths, ...newGrowthAreas].map((i) => i.text);
+      const briefing: Briefing = {
+        skill: highlights[0] ?? "Graded assignment",
+        why_it_matters: parsed.updated_summary,
+        is_new_concept: false,
+        analogies: [],
+        household_objects: [],
+        followup_questions: [],
+        stuck_tip: "",
+        alternate_approach: "",
+        watch_for: "",
+        praise_phrase: "",
+        autonomy_tip: "",
+        real_life_connection: "",
+        estimated_minutes: "",
+        math_anxiety_note: "",
+      };
+      const { error: sessionError } = await supabase.from("sessions").insert({
+        child_id: childId,
+        subject: safeSubject,
+        source: "homework",
+        skill: highlights[0] ?? "Graded assignment",
+        briefing,
+        checkin: null,
+        micro_message: highlights.length > 0 ? highlights.join(" · ") : "Added to the profile.",
+        parent_notes: notes?.trim() || null,
+      });
+      if (sessionError) console.error("[intake-report] session insert failed", sessionError);
+    }
 
     return NextResponse.json({
       updatedSummary: parsed.updated_summary,
