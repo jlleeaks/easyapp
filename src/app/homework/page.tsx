@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/ui/Shell";
 import { HomeworkHub } from "@/components/homework/HomeworkHub";
-import type { ChildProfile, Session } from "@/lib/types";
+import { computeRoadmap } from "@/lib/roadmap";
+import type { ChildProfile, Session, Skill } from "@/lib/types";
 
 export default async function HomeworkPage({
   searchParams,
@@ -23,13 +24,23 @@ export default async function HomeworkPage({
     .maybeSingle<ChildProfile>();
   if (!child) redirect("/onboarding");
 
-  const { data: sessions } = await supabase
-    .from("sessions")
-    .select("*")
-    .eq("child_id", child.id)
-    .neq("source", "library")
-    .order("created_at", { ascending: false })
-    .returns<Session[]>();
+  const [{ data: sessions }, { data: skills }] = await Promise.all([
+    supabase
+      .from("sessions")
+      .select("*")
+      .eq("child_id", child.id)
+      .neq("source", "library")
+      .order("created_at", { ascending: false })
+      .returns<Session[]>(),
+    supabase.from("skills").select("*").eq("child_id", child.id).returns<Skill[]>(),
+  ]);
+
+  const roadmap = computeRoadmap({
+    skills: skills ?? [],
+    sessions: sessions ?? [],
+    strengths: child.strengths ?? [],
+    growthAreas: child.growth_areas ?? [],
+  });
 
   const { subject, session } = await searchParams;
 
@@ -39,6 +50,7 @@ export default async function HomeworkPage({
         childId={child.id}
         childName={child.name}
         sessions={sessions ?? []}
+        roadmap={roadmap}
         initialSubject={subject}
         initialSessionId={session}
       />

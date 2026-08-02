@@ -17,9 +17,15 @@ type AssignmentIntakeResult = {
   recap: string;
   went_well: string[];
   to_improve: string[];
+  analogies: string[];
+  stuck_tip: string;
   strengths: TaggedInsight[];
   growth_areas: TaggedInsight[];
 };
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 const VALID_SUBJECTS: Subject[] = ["math", "writing", "reading"];
 const MAX_INSIGHTS = 30;
@@ -124,15 +130,16 @@ export async function POST(request: Request) {
         .eq("id", childId);
       if (updateError) throw updateError;
 
-      const topic = parsed.topic?.trim() || "Graded assignment";
+      const topicPhrase = parsed.topic?.trim() || "this assignment";
+      const title = `Graded ${capitalize(safeSubject)} assignment: ${topicPhrase}`;
       const briefing: Briefing = {
-        skill: topic,
+        skill: title,
         why_it_matters: parsed.recap ?? "",
         is_new_concept: false,
-        analogies: [],
+        analogies: parsed.analogies ?? [],
         household_objects: [],
         followup_questions: [],
-        stuck_tip: "",
+        stuck_tip: parsed.stuck_tip ?? "",
         alternate_approach: "",
         watch_for: "",
         praise_phrase: "",
@@ -147,7 +154,7 @@ export async function POST(request: Request) {
         child_id: childId,
         subject: safeSubject,
         source: "homework",
-        skill: topic,
+        skill: title,
         briefing,
         checkin: null,
         micro_message: parsed.recap ?? null,
@@ -156,7 +163,7 @@ export async function POST(request: Request) {
       if (sessionError) console.error("[intake-report] session insert failed", sessionError);
 
       return NextResponse.json({
-        topic,
+        topic: title,
         recap: parsed.recap,
         wentWell: parsed.went_well ?? [],
         toImprove: parsed.to_improve ?? [],

@@ -23,6 +23,8 @@ import { BriefingView } from "@/components/homework/BriefingView";
 import { AssignmentRecapView } from "@/components/homework/AssignmentRecapView";
 import { CompactBriefingView } from "@/components/homework/CompactBriefingView";
 import { BriefingSkeleton } from "@/components/homework/BriefingSkeleton";
+import { matchAreaByText } from "@/lib/standards";
+import type { AreaRoadmap } from "@/lib/roadmap";
 import type { Briefing, CheckinAnswers, Session, Subject } from "@/lib/types";
 
 type Step =
@@ -60,12 +62,14 @@ export function HomeworkHub({
   childId,
   childName,
   sessions,
+  roadmap,
   initialSubject,
   initialSessionId,
 }: {
   childId: string;
   childName: string;
   sessions: Session[];
+  roadmap: AreaRoadmap[];
   initialSubject?: string;
   initialSessionId?: string;
 }) {
@@ -405,6 +409,10 @@ export function HomeworkHub({
     // briefing was delivered), so it never has a checkin — that's how we tell it apart
     // from a real coached homework/practice session and route it to the recap view.
     const isLoggedAssignment = !viewingSession.checkin;
+    const matchedArea = isLoggedAssignment
+      ? matchAreaByText(viewingSession.subject as Subject, `${viewingSession.skill} ${viewingSession.micro_message ?? ""}`)
+      : null;
+    const matchedRoadmapItem = matchedArea ? roadmap.find((r) => r.area.id === matchedArea.id) ?? null : null;
     return (
       <div className="animate-fade-in-up max-w-[760px] mx-auto">
         <button
@@ -443,7 +451,7 @@ export function HomeworkHub({
         )}
 
         {isLoggedAssignment ? (
-          <AssignmentRecapView briefing={viewingSession.briefing} childName={childName} />
+          <AssignmentRecapView briefing={viewingSession.briefing} childName={childName} matchedArea={matchedRoadmapItem} />
         ) : (
           <BriefingView briefing={viewingSession.briefing} />
         )}
