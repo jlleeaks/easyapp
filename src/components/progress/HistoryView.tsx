@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { ChevronRight, BookOpen, Check, NotebookPen } from "lucide-react";
 import { PALETTE } from "@/lib/palette";
-import { Card, Eyebrow, RowList, Row } from "@/components/ui/primitives";
+import { Card, Eyebrow, RowList, IconTile } from "@/components/ui/primitives";
+import { SubjectBadge } from "@/components/ui/SubjectBadge";
 import { WeekTracker } from "@/components/ui/WeekTracker";
 import { StreakNote } from "@/components/ui/StreakNote";
 import { LocalDateLabel } from "@/components/ui/LocalDateLabel";
@@ -70,30 +71,42 @@ export function HistoryView({ childName, sessions, dates }: { childName: string;
                 const area = areaForFocusText(s.subject, s.skill);
                 const cinHomework = isHomeworkCheckin(s.checkin) ? s.checkin : null;
                 const cinLibrary = isLibraryCheckin(s.checkin) ? s.checkin : null;
-                const subtitleParts = [
-                  area ? `${meta.label} · ${area.area}` : meta.label,
+                const secondaryParts = [
                   cinHomework ? `You reported: ${cinHomework.overall}` : null,
                   cinLibrary ? `You reported: ${cinLibrary.response}` : null,
                   s.micro_message ? `Easy: ${s.micro_message.length > 70 ? s.micro_message.slice(0, 67) + "…" : s.micro_message}` : null,
                 ].filter(Boolean);
                 return (
-                  <Row
+                  <Link
                     key={s.id}
                     href={sessionHref(s)}
-                    icon={s.source === "library" ? <BookOpen size={16} /> : <Check size={16} />}
-                    iconColor={meta.color}
-                    iconSoft={meta.soft}
-                    title={s.skill}
-                    subtitle={subtitleParts.join(" — ")}
-                    trailing={
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <span className="text-xs font-semibold" style={{ color: PALETTE.inkSoft }}>
-                          <LocalDateLabel iso={s.created_at} />
-                        </span>
-                        <ChevronRight size={16} color={PALETTE.inkFaint} />
+                    className="flex items-center gap-3 px-5 py-4 w-full text-left transition-colors duration-150 hover:bg-black/[0.015]"
+                    style={{ borderBottom: `1px solid ${PALETTE.line}` }}
+                  >
+                    <IconTile color={meta.color} soft={meta.soft} size={34}>
+                      {s.source === "library" ? <BookOpen size={16} /> : <Check size={16} />}
+                    </IconTile>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <p className="text-sm font-semibold">{s.skill}</p>
+                        <SubjectBadge subject={s.subject} />
                       </div>
-                    }
-                  />
+                      <p className="text-xs font-semibold mb-0.5" style={{ color: area ? meta.color : PALETTE.inkFaint }}>
+                        {area ? `→ ${area.area}` : "Not yet mapped to a roadmap area"}
+                      </p>
+                      {secondaryParts.length > 0 && (
+                        <p className="text-xs truncate" style={{ color: PALETTE.inkSoft }}>
+                          {secondaryParts.join(" — ")}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className="text-xs font-semibold" style={{ color: PALETTE.inkSoft }}>
+                        <LocalDateLabel iso={s.created_at} />
+                      </span>
+                      <ChevronRight size={16} color={PALETTE.inkFaint} />
+                    </div>
+                  </Link>
                 );
               })}
             </RowList>

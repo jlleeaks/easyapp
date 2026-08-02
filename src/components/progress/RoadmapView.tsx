@@ -144,7 +144,6 @@ function ObservedRow({ item, childName }: { item: AreaRoadmap; childName: string
 
 function SubjectRoadmap({ childName, areasBySubject }: { childName: string; areasBySubject: Record<Subject, AreaRoadmap[]> }) {
   const [activeSubject, setActiveSubject] = useState<Subject>("math");
-  const [showAllGoals, setShowAllGoals] = useState(false);
   const [showNextGradePreview, setShowNextGradePreview] = useState(false);
   const items = areasBySubject[activeSubject] ?? [];
   const observed = items.filter((a) => a.evidence.length > 0);
@@ -176,7 +175,6 @@ function SubjectRoadmap({ childName, areasBySubject }: { childName: string; area
               key={s.key}
               onClick={() => {
                 setActiveSubject(s.key);
-                setShowAllGoals(false);
                 setShowNextGradePreview(false);
               }}
               className="btn-press text-left p-5 transition-all duration-150"
@@ -219,18 +217,27 @@ function SubjectRoadmap({ childName, areasBySubject }: { childName: string; area
           : `${childName} is developing ${observed.length} observed ${meta.label.toLowerCase()} area${observed.length === 1 ? "" : "s"}.`}
       </p>
 
-      {observed.length > 0 && (
-        <div className="mb-5">
-          <SectionHeading>What Easy has observed</SectionHeading>
-          <Card style={{ marginBottom: 0 }}>
-            <div className="px-5">
-              {observed.map((item) => (
-                <ObservedRow key={item.area.id} item={item} childName={childName} />
-              ))}
+      <div className="mb-5">
+        <SectionHeading>
+          {items.length} area{items.length === 1 ? "" : "s"} in kindergarten {meta.label.toLowerCase()}
+        </SectionHeading>
+        <Card style={{ marginBottom: 0 }}>
+          <div className="px-5">
+            {items.map((item) => (
+              <ObservedRow key={item.area.id} item={item} childName={childName} />
+            ))}
+          </div>
+          {notObserved.length > 0 && (
+            <div className="px-5 py-3 flex items-start gap-2" style={{ borderTop: `1px solid ${PALETTE.line}` }}>
+              <Info size={13} color={PALETTE.inkFaint} className="flex-shrink-0 mt-0.5" />
+              <p className="text-xs" style={{ color: PALETTE.inkFaint }}>
+                &quot;Not yet observed&quot; means Easy doesn&apos;t have enough information — it doesn&apos;t mean {childName}
+                {" "}can&apos;t do it.
+              </p>
             </div>
-          </Card>
-        </div>
-      )}
+          )}
+        </Card>
+      </div>
 
       {nextStepArea && (
         <div className="mb-5">
@@ -251,44 +258,6 @@ function SubjectRoadmap({ childName, areasBySubject }: { childName: string; area
         </div>
       )}
 
-      {notObserved.length > 0 && (
-        <div>
-          <SectionHeading>Other kindergarten {meta.label.toLowerCase()} goals</SectionHeading>
-          {!showAllGoals ? (
-            <button
-              onClick={() => setShowAllGoals(true)}
-              className="text-sm underline"
-              style={{ color: PALETTE.inkSoft }}
-            >
-              Easy has not observed {notObserved.length} other {meta.label.toLowerCase()} area{notObserved.length === 1 ? "" : "s"} yet — view all goals
-            </button>
-          ) : (
-            <Card style={{ marginBottom: 0 }}>
-              <div className="px-5">
-                {notObserved.map((item, i) => (
-                  <div
-                    key={item.area.id}
-                    className="flex items-center justify-between gap-3 py-3"
-                    style={{ borderTop: i > 0 ? `1px solid ${PALETTE.line}` : "none" }}
-                  >
-                    <p className="text-sm font-semibold">{item.area.area}</p>
-                    <StateMarker state={item.state} />
-                  </div>
-                ))}
-              </div>
-              <div className="px-5 py-3 flex items-start gap-2" style={{ borderTop: `1px solid ${PALETTE.line}` }}>
-                <Info size={13} color={PALETTE.inkFaint} className="flex-shrink-0 mt-0.5" />
-                <p className="text-xs" style={{ color: PALETTE.inkFaint }}>
-                  &quot;Not yet observed&quot; means Easy doesn&apos;t have enough information
-                  {" "}
-                  — it doesn&apos;t mean {childName} can&apos;t do it.
-                </p>
-              </div>
-            </Card>
-          )}
-        </div>
-      )}
-
       <div className="mt-5">
         {!showNextGradePreview ? (
           <button
@@ -296,11 +265,11 @@ function SubjectRoadmap({ childName, areasBySubject }: { childName: string; area
             className="text-sm font-bold underline"
             style={{ color: PALETTE.violetDeep }}
           >
-            What comes next in first grade →
+            A look at how this builds into first grade →
           </button>
         ) : (
           <div>
-            <SectionHeading color={PALETTE.violetDeep}>What comes next in first grade</SectionHeading>
+            <SectionHeading color={PALETTE.violetDeep}>A look at how this builds into first grade</SectionHeading>
             <Card style={{ marginBottom: 0 }}>
               <div className="px-5">
                 {items.map((item, i) => (
