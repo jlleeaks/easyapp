@@ -3,7 +3,7 @@ import { SKILL_STAGES } from "@/lib/palette";
 import type { Skill, Session, ProfileInsight, LearningPattern, InsightSource } from "@/lib/types";
 
 export type RoadmapEvidence = {
-  type: "skill" | "session" | "insight";
+  type: "session" | "insight";
   text: string;
   date: string;
   source: InsightSource | Session["source"];
@@ -43,11 +43,14 @@ export function computeRoadmap(input: {
     const evidence: RoadmapEvidence[] = [];
     let bestStageRank = -1;
 
+    // The skills-table stage is Easy's own derived summary FROM sessions, not a
+    // separate piece of evidence — use it only to inform the state, never list it
+    // alongside the session it was itself computed from (that double-counts one
+    // check-in as two independent evidence items).
     for (const sk of input.skills) {
       if (sk.subject !== area.subject) continue;
       const matched = matchAreaByText(area.subject, sk.skill_name);
       if (matched?.id !== area.id) continue;
-      evidence.push({ type: "skill", text: sk.skill_name, date: sk.updated_at, source: "session" });
       bestStageRank = Math.max(bestStageRank, stageRank(sk.stage));
     }
 
@@ -73,6 +76,7 @@ export function computeRoadmap(input: {
 
 export function roadmapSummary(areas: AreaRoadmap[]) {
   return {
+    withEvidence: areas.filter((a) => a.evidence.length > 0).length,
     comfortable: areas.filter((a) => a.state === "comfortable" || a.state === "ready_to_extend").length,
     developing: areas.filter((a) => a.state === "developing" || a.state === "introduced").length,
     notObserved: areas.filter((a) => a.state === "not_yet_observed").length,

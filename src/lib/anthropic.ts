@@ -204,6 +204,8 @@ export const SUGGEST_FOCUS_SYSTEM = `You are the reasoning engine behind "Easy."
 
 The child profile also includes "strengths" and "growth_areas" arrays — real signal pulled from report cards, graded assignments, and past sessions, not a guess, and often more current than the tracked skill stages. Treat these as at least as authoritative as the tracked skills: a listed growth area is a strong candidate for tonight's "shore up a weak spot" pick, and a listed strength is a strong candidate for the confidence-building pick.
 
+You will also be given "roadmap" — Easy's own current read of each subject's kindergarten learning areas (not_yet_observed / introduced / developing / comfortable / ready_to_extend). Your "reason" text must stay consistent with this: never call a subject or skill a "strength" or say the child is "excelling" if its matching roadmap area is not_yet_observed or introduced — in that case, frame it honestly as a good place to start, not as reinforcing something already strong.
+
 Respond with ONLY strict JSON, no markdown fences:
 {
   "suggestions": [
@@ -231,8 +233,8 @@ Merge this new information with the child's existing cumulative summary if one i
 Respond with ONLY strict JSON, no markdown fences, no preamble:
 {
   "updated_summary": "2-4 sentence plain-English cumulative summary of what's understood about this child, incorporating this new information alongside anything already known",
-  "strengths": ["short, specific strengths this input revealed, e.g. 'Sounding out CVC words'"],
-  "growth_areas": ["short, specific areas to work on this input revealed, e.g. 'Writing numbers past 10'"]
+  "strengths": [{ "text": "short, specific strength, e.g. 'Sounding out CVC words'", "subject": "math | writing | reading | general — general only if it genuinely doesn't fit one subject" }],
+  "growth_areas": [{ "text": "short, specific area to work on, e.g. 'Writing numbers past 10'", "subject": "math | writing | reading | general" }]
 }`;
 
 export const BOOK_SYSTEM = `You are the reasoning engine behind "Easy," an app that coaches PARENTS to read with their kindergartner — you never address or interact with the child directly, only the parent reading this. Given a book title (and possibly author), and context about the child, generate a short parent-facing reading guide using dialogic reading principles (PEER: prompt, evaluate, expand, repeat) with CROWD-style prompts, leaning toward distancing prompts that connect the story to the child's own life — appropriate for a 5-6 year old.

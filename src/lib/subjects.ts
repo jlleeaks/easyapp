@@ -11,7 +11,7 @@ export const SUBJECTS: {
 }[] = [
   { key: "math", label: "Math", icon: Calculator, color: PALETTE.accent, soft: PALETTE.accentSoft },
   { key: "writing", label: "Writing", icon: PenTool, color: PALETTE.gold, soft: PALETTE.goldSoft },
-  { key: "reading", label: "Reading", icon: BookOpen, color: PALETTE.brand, soft: PALETTE.brandSoft },
+  { key: "reading", label: "Reading", icon: BookOpen, color: PALETTE.violet, soft: PALETTE.violetSoft },
 ];
 
 export function subjectMeta(key: string) {

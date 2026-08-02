@@ -4,10 +4,12 @@ import { REPORT_INTAKE_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/l
 import type { ChildProfile, ProfileInsight, Subject } from "@/lib/types";
 import type Anthropic from "@anthropic-ai/sdk";
 
+type TaggedInsight = { text: string; subject?: string };
+
 type IntakeResult = {
   updated_summary: string;
-  strengths: string[];
-  growth_areas: string[];
+  strengths: TaggedInsight[];
+  growth_areas: TaggedInsight[];
 };
 
 const VALID_SUBJECTS: Subject[] = ["math", "writing", "reading"];
@@ -74,18 +76,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Couldn't make sense of that — try again." }, { status: 502 });
     }
 
+    // When the intake entry point already pins a subject (e.g. a Homework subject page),
+    // trust that context. Otherwise (the general Profile intake) use the model's own
+    // per-item subject tag so insights stay findable by the roadmap for the right subject.
+    function resolveSubject(itemSubject?: string): Subject | "general" {
+      if (safeSubject !== "general") return safeSubject;
+      return VALID_SUBJECTS.includes(itemSubject as Subject) ? (itemSubject as Subject) : "general";
+    }
+
     const now = new Date().toISOString();
-    const newStrengths: ProfileInsight[] = (parsed.strengths ?? []).map((text) => ({
+    const newStrengths: ProfileInsight[] = (parsed.strengths ?? []).map((item) => ({
       id: crypto.randomUUID(),
-      subject: safeSubject,
-      text,
+      subject: resolveSubject(item.subject),
+      text: item.text,
       source,
       created_at: now,
     }));
-    const newGrowthAreas: ProfileInsight[] = (parsed.growth_areas ?? []).map((text) => ({
+    const newGrowthAreas: ProfileInsight[] = (parsed.growth_areas ?? []).map((item) => ({
       id: crypto.randomUUID(),
-      subject: safeSubject,
-      text,
+      subject: resolveSubject(item.subject),
+      text: item.text,
       source,
       created_at: now,
     }));
@@ -105,8 +115,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       updatedSummary: parsed.updated_summary,
-      strengths: parsed.strengths,
-      growthAreas: parsed.growth_areas,
+      strengths: newStrengths.map((s) => s.text),
+      growthAreas: newGrowthAreas.map((g) => g.text),
     });
   } catch {
     return NextResponse.json(

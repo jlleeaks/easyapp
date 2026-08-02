@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { PALETTE, RADIUS } from "@/lib/palette";
 import { RoadmapView } from "@/components/progress/RoadmapView";
 import { HistoryView } from "@/components/progress/HistoryView";
@@ -8,29 +8,19 @@ import type { AreaRoadmap } from "@/lib/roadmap";
 import type { Subject, Session, LearningPattern } from "@/lib/types";
 
 export function ProgressTabs({
-  childId,
   childName,
   areasBySubject,
   patterns,
   sessions,
   dates,
 }: {
-  childId: string;
   childName: string;
   areasBySubject: Record<Subject, AreaRoadmap[]>;
   patterns: LearningPattern[];
   sessions: Session[];
   dates: string[];
 }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const view = searchParams.get("view") === "history" ? "history" : "roadmap";
-
-  function setView(next: "roadmap" | "history") {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("view", next);
-    router.push(`/progress?${params.toString()}`, { scroll: false });
-  }
+  const [view, setView] = useState<"roadmap" | "history">("roadmap");
 
   return (
     <div>
@@ -56,7 +46,7 @@ export function ProgressTabs({
       </div>
 
       {view === "roadmap" ? (
-        <RoadmapView childId={childId} childName={childName} areasBySubject={areasBySubject} patterns={patterns} />
+        <RoadmapView childName={childName} areasBySubject={areasBySubject} patterns={patterns} />
       ) : (
         <HistoryView childName={childName} sessions={sessions} dates={dates} />
       )}

@@ -19,6 +19,15 @@ export const PALETTE = {
   goldSoft: "#FBEDD1",
   goldLine: "#F0DCA8",
 
+  violet: "#7C6BAE",
+  violetDeep: "#635391",
+  violetSoft: "#EDE9F7",
+  violetLine: "#D9D0EC",
+
+  blue: "#4C7699",
+  blueSoft: "#E4EDF3",
+  blueLine: "#C9DBE7",
+
   // legacy aliases kept for any not-yet-migrated call sites
   honey: "#C6871F",
   honeyDeep: "#B84A24",

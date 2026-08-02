@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { SUGGEST_FOCUS_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
-import type { ChildProfile, Subject } from "@/lib/types";
-
-type Suggestion = { subject: Subject; focus: string; reason: string };
+import { getTonightSuggestions } from "@/lib/suggestions";
+import type { ChildProfile, Session } from "@/lib/types";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -30,25 +28,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Child not found." }, { status: 404 });
   }
 
-  const { data: skills } = await supabase.from("skills").select("subject, skill_name, stage").eq("child_id", childId);
+  const { data: skills } = await supabase.from("skills").select("*").eq("child_id", childId);
+  const { data: sessions } = await supabase.from("sessions").select("*").eq("child_id", childId).returns<Session[]>();
 
   try {
-    const parsed = await callClaudeJSON<{ suggestions: Suggestion[] }>({
-      system: SUGGEST_FOCUS_SYSTEM,
-      userContent: [
-        {
-          type: "text",
-          text: `Child profile: ${JSON.stringify(childProfileForPrompt(child))}\nCurrently tracked skills: ${JSON.stringify(skills ?? [])}`,
-        },
-      ],
-      maxTokens: 900,
-    });
-
-    if (!parsed?.suggestions?.length) {
+    const suggestions = await getTonightSuggestions(child, skills ?? [], sessions ?? []);
+    if (!suggestions) {
       return NextResponse.json({ error: "Couldn't come up with suggestions — try again." }, { status: 502 });
     }
-
-    return NextResponse.json({ suggestions: parsed.suggestions });
+    return NextResponse.json({ suggestions });
   } catch {
     return NextResponse.json({ error: "Something went wrong. Try again." }, { status: 502 });
   }

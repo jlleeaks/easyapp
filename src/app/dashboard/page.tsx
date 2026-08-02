@@ -1,13 +1,17 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Camera, Sparkles, BookOpen, Lightbulb, ArrowRight } from "lucide-react";
+import { Camera, Sparkles, BookOpen } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PALETTE } from "@/lib/palette";
 import { Shell } from "@/components/ui/Shell";
-import { Wordmark, Eyebrow, Card } from "@/components/ui/primitives";
+import { Wordmark } from "@/components/ui/primitives";
 import { HomeGreeting } from "@/components/ui/HomeGreeting";
-import { TonightActivityCard, SecondaryActionLink } from "@/components/ui/TonightActivityCard";
-import type { ChildProfile, Session } from "@/lib/types";
+import { TonightActivityHero, SecondaryActionTile } from "@/components/ui/TonightActivityCard";
+import { NoticingStrip } from "@/components/ui/NoticingStrip";
+import { ContinueLastTime } from "@/components/ui/ContinueLastTime";
+import { getTonightSuggestions } from "@/lib/suggestions";
+import { areaForFocusText } from "@/lib/roadmap";
+import type { ChildProfile, Session, Skill } from "@/lib/types";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -30,23 +34,27 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .maybeSingle<{ name: string | null }>();
 
-  const { data: recentSessions } = await supabase
-    .from("sessions")
-    .select("*")
-    .eq("child_id", child.id)
-    .order("created_at", { ascending: false })
-    .limit(3)
-    .returns<Session[]>();
+  const [{ data: allSessions }, { data: skills }] = await Promise.all([
+    supabase.from("sessions").select("*").eq("child_id", child.id).order("created_at", { ascending: false }).returns<Session[]>(),
+    supabase.from("skills").select("*").eq("child_id", child.id).returns<Skill[]>(),
+  ]);
+  const sessions = allSessions ?? [];
 
-  const continuation = (recentSessions ?? []).find((s) => s.micro_message?.trim());
-  const continuationHref = continuation
-    ? continuation.source === "library"
-      ? continuation.book_id
-        ? `/library?book=${continuation.book_id}`
-        : "/library"
-      : `/homework?subject=${continuation.subject}&session=${continuation.id}`
-    : null;
-  const continuationLabel = continuation?.source === "library" ? "Open story guide" : "Open session";
+  // Resolve tonight's suggestion server-side (no client loading delay) and ground
+  // its "why" against the same roadmap state Progress shows, so the two can't disagree.
+  let suggestion = null;
+  let suggestionArea = null;
+  try {
+    const suggestions = await getTonightSuggestions(child, skills ?? [], sessions);
+    suggestion = suggestions?.[0] ?? null;
+    if (suggestion) {
+      suggestionArea = areaForFocusText(suggestion.subject, suggestion.focus);
+    }
+  } catch {
+    suggestion = null;
+  }
+
+  const continuation = sessions.slice(0, 3).find((s) => s.micro_message?.trim()) ?? null;
 
   const patterns = child.learning_patterns ?? [];
   const noticing = patterns.length > 0 ? patterns[0] : null;
@@ -59,68 +67,30 @@ export default async function DashboardPage() {
 
       <HomeGreeting parentName={parent?.name} childName={child.name} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_336px] gap-5 items-start">
-        <div className="flex flex-col gap-5 min-w-0">
-          <TonightActivityCard childId={child.id} childName={child.name} />
+      <TonightActivityHero childName={child.name} suggestion={suggestion} area={suggestionArea} />
 
-          <div>
-            <p className="text-xs font-bold uppercase mb-2.5 px-1" style={{ color: PALETTE.inkFaint, letterSpacing: "0.06em" }}>
-              Something else tonight?
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <SecondaryActionLink href="/homework" icon={<Camera size={15} />} label="Upload homework" />
-              <SecondaryActionLink href="/practice" icon={<Sparkles size={15} />} label="Choose another activity" />
-              <SecondaryActionLink href="/library" icon={<BookOpen size={15} />} label="Read together" />
-            </div>
-          </div>
-
-          {noticing && (
-            <Card style={{ marginBottom: 0 }}>
-              <div className="p-5">
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <Lightbulb size={13} color={PALETTE.brand} />
-                  <Eyebrow color={PALETTE.brand}>One thing to notice</Eyebrow>
-                </div>
-                <p className="text-sm" style={{ color: PALETTE.inkSoft }}>
-                  {noticing.observation}
-                  {noticing.parent_response ? ` — ${noticing.parent_response} appeared to help.` : "."}
-                </p>
-              </div>
-            </Card>
-          )}
-
-          {continuation && continuationHref && (
-            <Card style={{ marginBottom: 0 }}>
-              <div className="p-5">
-                <Eyebrow color={PALETTE.gold}>Continue from last time</Eyebrow>
-                <p className="text-sm mt-1 mb-3" style={{ color: PALETTE.inkSoft }}>
-                  {continuation.micro_message}
-                </p>
-                <Link
-                  href={continuationHref}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold"
-                  style={{ color: PALETTE.brand }}
-                >
-                  {continuationLabel} <ArrowRight size={13} />
-                </Link>
-              </div>
-            </Card>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-4 min-w-0">
-          <Card style={{ marginBottom: 0 }}>
-            <div className="p-4 text-center">
-              <p className="text-xs" style={{ color: PALETTE.inkSoft }}>
-                Not sure what {child.name} needs?{" "}
-                <Link href="/chat" className="font-bold underline" style={{ color: PALETTE.brand }}>
-                  Ask Easy
-                </Link>
-              </p>
-            </div>
-          </Card>
+      <div className="mt-5">
+        <p className="text-xs font-bold uppercase mb-2.5 px-1" style={{ color: PALETTE.inkFaint, letterSpacing: "0.06em" }}>
+          Something else tonight?
+        </p>
+        <div className="flex flex-wrap gap-2.5">
+          <SecondaryActionTile href="/homework" icon={<Camera size={16} />} label="Upload homework" />
+          <SecondaryActionTile href="/practice" icon={<Sparkles size={16} />} label="Choose another activity" />
+          <SecondaryActionTile href="/library" icon={<BookOpen size={16} />} label="Read together" />
         </div>
       </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+        <NoticingStrip pattern={noticing} />
+        <ContinueLastTime session={continuation} />
+      </div>
+
+      <p className="text-xs text-center mt-6" style={{ color: PALETTE.inkFaint }}>
+        Not sure what {child.name} needs?{" "}
+        <Link href="/chat" className="font-bold underline" style={{ color: PALETTE.brand }}>
+          Ask Easy
+        </Link>
+      </p>
     </Shell>
   );
 }

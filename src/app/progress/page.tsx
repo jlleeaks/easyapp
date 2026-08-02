@@ -1,10 +1,8 @@
 import { redirect } from "next/navigation";
-import { TrendingUp } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { PALETTE } from "@/lib/palette";
 import { Shell } from "@/components/ui/Shell";
-import { PageHeader } from "@/components/ui/primitives";
 import { ProgressTabs } from "@/components/progress/ProgressTabs";
+import { RoadmapHeader } from "@/components/progress/RoadmapHeader";
 import { computeRoadmap, type AreaRoadmap } from "@/lib/roadmap";
 import { SUBJECTS } from "@/lib/subjects";
 import type { ChildProfile, Session, Skill, Subject } from "@/lib/types";
@@ -53,17 +51,9 @@ export default async function ProgressPage() {
 
   return (
     <Shell wide>
-      <PageHeader
-        icon={<TrendingUp size={22} color={PALETTE.gold} />}
-        color={PALETTE.gold}
-        soft={PALETTE.goldSoft}
-        eyebrow="Progress"
-        title={`${child.name}'s learning roadmap`}
-        subtitle={`See what ${child.name} is working toward, what Easy has observed, and what would help next — no grades or comparisons.`}
-      />
+      <RoadmapHeader childName={child.name} />
 
       <ProgressTabs
-        childId={child.id}
         childName={child.name}
         areasBySubject={areasBySubject}
         patterns={child.learning_patterns ?? []}
