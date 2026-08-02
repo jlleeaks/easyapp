@@ -46,6 +46,7 @@ export function ProfileIntakeTabs({ childId, childName }: { childId: string; chi
           intakeType="report_card"
           title="Upload schoolwork or a report card"
           description={`Got a report card or graded schoolwork? Add it here and Easy folds it straight into what it already knows about ${childName}.`}
+          placeholder="e.g. B+ in reading comprehension, still reversing a few numbers when writing..."
         />
       )}
       {tab === "teacher" && (

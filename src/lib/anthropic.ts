@@ -240,6 +240,8 @@ export const REPORT_INTAKE_SYSTEM = `You are the reasoning engine behind "Easy."
 
 Extract only what's genuinely useful and concrete — real strengths and real areas to work on, not vague filler. If the input is a photo, read it carefully and quote/paraphrase what it actually says rather than guessing. If it's ambiguous or you can't make out something, say so honestly rather than inventing detail. If a specific subject is given as context, keep strengths/growth_areas focused on that subject; otherwise infer subject from the content itself where it's clearly one of math, writing, or reading.
 
+The child profile JSON already includes this child's EXISTING "strengths" and "growth_areas" — that's for background context only. Your own "strengths"/"growth_areas" output must contain ONLY items genuinely new from THIS specific input (this photo or these notes). Never restate, repeat, or re-list an existing strength/growth_area just because it appears in the profile JSON — if this input doesn't mention anything new, return an empty array for that field rather than echoing what's already known.
+
 Merge this new information with the child's existing cumulative summary if one is given — don't just overwrite it, blend the new signal in naturally, keeping the summary plain-English and parent-facing.
 
 Respond with ONLY strict JSON, no markdown fences, no preamble:

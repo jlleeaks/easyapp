@@ -23,7 +23,7 @@ export function ReportIntakeCard({
   intakeType = "report_card",
   title = "Give Easy a head start",
   description,
-  placeholder = "e.g. Teacher said she's strong with sight words but rushes through math without checking her work...",
+  placeholder = "e.g. Strong with sight words, still rushes through math without checking her work...",
   uploadLabel = "Or attach a photo of a report card",
 }: {
   childId: string;
