@@ -1,26 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, PartyPopper, MessageCircleHeart } from "lucide-react";
+import { ArrowLeft, MessageCircleHeart } from "lucide-react";
 import { PALETTE, RADIUS } from "@/lib/palette";
 import { subjectMeta } from "@/lib/subjects";
+import { LocalDateLabel } from "@/components/ui/LocalDateLabel";
 import type { Session } from "@/lib/types";
 
-function randomGateQuestion() {
-  const a = 3 + Math.floor(Math.random() * 6);
-  const b = 3 + Math.floor(Math.random() * 6);
-  return { a, b, sum: a + b };
+const HOLD_MS = 1200;
+
+function HoldToExit() {
+  const router = useRouter();
+  const [holding, setHolding] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function start() {
+    setHolding(true);
+    timerRef.current = setTimeout(() => router.push("/dashboard"), HOLD_MS);
+  }
+  function cancel() {
+    setHolding(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  return (
+    <button
+      onPointerDown={start}
+      onPointerUp={cancel}
+      onPointerLeave={cancel}
+      onPointerCancel={cancel}
+      className="flex items-center gap-2 text-xs font-semibold select-none"
+      style={{ color: PALETTE.inkFaint }}
+    >
+      <span
+        className="relative flex-shrink-0 overflow-hidden"
+        style={{ width: 14, height: 14, borderRadius: "50%", border: `1.5px solid ${PALETTE.inkFaint}` }}
+      >
+        <span
+          className="absolute left-0 bottom-0 w-full"
+          style={{
+            height: holding ? "100%" : "0%",
+            background: PALETTE.inkFaint,
+            transition: holding ? `height ${HOLD_MS}ms linear` : "height 120ms ease-out",
+          }}
+        />
+      </span>
+      Press and hold for a grown-up
+    </button>
+  );
 }
 
 export function KidHome({ childName, sessions }: { childName: string; sessions: Session[] }) {
-  const router = useRouter();
   const [active, setActive] = useState<Session | null>(null);
   const [done, setDone] = useState(false);
-  const [exiting, setExiting] = useState(false);
-  const [gateAnswer, setGateAnswer] = useState("");
-  const [gateWrong, setGateWrong] = useState(false);
-  const [gateQuestion, setGateQuestion] = useState(randomGateQuestion);
 
   const outerStyle: React.CSSProperties = {
     minHeight: "100vh",
@@ -33,60 +69,6 @@ export function KidHome({ childName, sessions }: { childName: string; sessions: 
     maxWidth: 480,
     padding: "28px 20px 40px",
   };
-
-  if (exiting) {
-    return (
-      <div style={outerStyle}>
-        <div style={{ ...shellStyle, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-          <div className="font-serif-display" style={{ fontSize: 22, fontWeight: 800, marginBottom: 10 }}>
-            Ask a grown-up for help! 🙋
-          </div>
-          <p className="text-sm mb-5" style={{ color: PALETTE.inkSoft, maxWidth: 260 }}>
-            What&apos;s {gateQuestion.a} + {gateQuestion.b}?
-          </p>
-          <input
-            value={gateAnswer}
-            onChange={(e) => {
-              setGateAnswer(e.target.value);
-              setGateWrong(false);
-            }}
-            inputMode="numeric"
-            className="text-center text-2xl font-bold outline-none mb-4"
-            style={{ width: 100, padding: "10px 0", borderRadius: RADIUS.sm, border: `2px solid ${gateWrong ? PALETTE.accent : PALETTE.line}`, background: "#fff" }}
-          />
-          {gateWrong && (
-            <p className="text-xs mb-3" style={{ color: PALETTE.accent }}>
-              Not quite — try again!
-            </p>
-          )}
-          <div className="flex flex-col gap-2.5" style={{ width: 220 }}>
-            <button
-              onClick={() => {
-                if (Number(gateAnswer) === gateQuestion.sum) {
-                  router.push("/dashboard");
-                } else {
-                  setGateWrong(true);
-                  setGateAnswer("");
-                  setGateQuestion(randomGateQuestion());
-                }
-              }}
-              className="btn-press py-3 rounded-2xl font-bold text-sm"
-              style={{ background: PALETTE.brand, color: "#fff" }}
-            >
-              Go back
-            </button>
-            <button
-              onClick={() => setExiting(false)}
-              className="btn-press py-3 rounded-2xl font-bold text-sm"
-              style={{ background: "#fff", color: PALETTE.inkSoft, border: `1px solid ${PALETTE.line}` }}
-            >
-              Never mind
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (active) {
     const b = active.briefing;
@@ -151,14 +133,13 @@ export function KidHome({ childName, sessions }: { childName: string; sessions: 
               className="btn-press w-full py-4 rounded-2xl font-bold text-lg"
               style={{ background: PALETTE.brand, color: "#fff" }}
             >
-              I did it! 🎉
+              Mark as done
             </button>
           </>
         ) : (
           <div className="flex flex-col items-center text-center py-10">
-            <PartyPopper size={48} color={PALETTE.gold} />
-            <p className="font-serif-display mt-4" style={{ fontSize: 22, fontWeight: 800 }}>
-              Great job, {childName}!
+            <p className="font-serif-display" style={{ fontSize: 22, fontWeight: 800 }}>
+              Marked as done.
             </p>
             <p className="text-sm mt-1.5" style={{ color: PALETTE.inkSoft }}>
               Tell a grown-up how it went.
@@ -174,16 +155,16 @@ export function KidHome({ childName, sessions }: { childName: string; sessions: 
     <div style={outerStyle}>
     <div style={shellStyle}>
       <h1 className="font-serif-display mb-1.5" style={{ fontSize: 30, fontWeight: 800 }}>
-        Hi {childName}! 👋
+        {childName}&apos;s activities
       </h1>
       <p className="text-sm mb-6" style={{ color: PALETTE.inkSoft }}>
-        Pick something to do:
+        Pick one below.
       </p>
 
       {sessions.length === 0 ? (
         <div className="rounded-2xl p-6 text-center" style={{ background: "#fff" }}>
           <p className="text-sm" style={{ color: PALETTE.inkSoft }}>
-            Nothing here yet — ask a grown-up to add something for you!
+            Nothing here yet. Ask a grown-up to add something.
           </p>
         </div>
       ) : (
@@ -203,25 +184,19 @@ export function KidHome({ childName, sessions }: { childName: string; sessions: 
                 >
                   <meta.icon size={21} color="#fff" />
                 </div>
-                <span className="text-lg font-bold">{s.skill}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-lg font-bold block">{s.skill}</span>
+                  <span className="text-xs font-semibold" style={{ color: PALETTE.inkFaint }}>
+                    <LocalDateLabel iso={s.created_at} options={{ month: "short", day: "numeric" }} />
+                  </span>
+                </div>
               </button>
             );
           })}
         </div>
       )}
 
-      <button
-        onClick={() => {
-          setGateQuestion(randomGateQuestion());
-          setGateAnswer("");
-          setGateWrong(false);
-          setExiting(true);
-        }}
-        className="text-xs font-semibold"
-        style={{ color: PALETTE.inkFaint }}
-      >
-        I&apos;m a grown-up, take me back
-      </button>
+      <HoldToExit />
     </div>
     </div>
   );

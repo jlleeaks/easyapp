@@ -1,18 +1,22 @@
+"use client";
+
 import { Flame } from "lucide-react";
 import { PALETTE, RADIUS } from "@/lib/palette";
 import { Avatar, Pill } from "@/components/ui/primitives";
+import { computeStreak } from "@/lib/streak";
 
 export function Hero({
   childName,
   parentName,
-  streak,
+  sessionDates,
   sessionCount = 0,
 }: {
   childName: string;
   parentName?: string | null;
-  streak: number;
+  sessionDates: string[];
   sessionCount?: number;
 }) {
+  const streak = computeStreak(sessionDates);
   return (
     <div
       className="relative overflow-hidden mb-5 animate-fade-in-up"
@@ -82,8 +86,9 @@ export function Hero({
           )}
           {sessionCount > 0 && (
             <p className="text-xs mt-2" style={{ color: PALETTE.inkSoft }}>
-              {sessionCount} session{sessionCount === 1 ? "" : "s"} together so far — that consistency is
-              exactly what moves the needle.
+              {sessionCount >= 5
+                ? `${sessionCount} sessions together so far — that consistency is exactly what moves the needle.`
+                : `${sessionCount} session${sessionCount === 1 ? "" : "s"} together so far.`}
             </p>
           )}
         </div>

@@ -4,8 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Send, Sparkles, Camera, TrendingUp, Loader2, PenLine, BookOpen } from "lucide-react";
 import { PALETTE, RADIUS } from "@/lib/palette";
-import { PageHeader } from "@/components/ui/primitives";
+import { PageHeader, AiMarkdown } from "@/components/ui/primitives";
 import type { ChatAction, ChatMessage } from "@/lib/types";
+
+function MessageBody({ content, isUser }: { content: string; isUser: boolean }) {
+  if (isUser) return <>{content}</>;
+  return <AiMarkdown content={content} />;
+}
 
 const STARTERS = [
   "She won't sit still for homework",
@@ -86,6 +91,7 @@ export function ChatScreen({
         content: data.reply || "Sorry, something went wrong — try again?",
         action: data.action ?? null,
         created_at: new Date().toISOString(),
+        retryText: data.reply ? undefined : content,
       };
       setMessages((m) => [...m, assistantMessage]);
     } catch {
@@ -98,6 +104,7 @@ export function ChatScreen({
           content: "Couldn't reach Easy just now — check your connection and try again.",
           action: null,
           created_at: new Date().toISOString(),
+          retryText: content,
         },
       ]);
     } finally {
@@ -152,7 +159,7 @@ export function ChatScreen({
                   borderTopLeftRadius: m.role === "assistant" ? 4 : undefined,
                 }}
               >
-                {m.content}
+                <MessageBody content={m.content} isUser={m.role === "user"} />
               </div>
               {m.action && (
                 <button
@@ -169,6 +176,16 @@ export function ChatScreen({
                     return <Icon size={13} />;
                   })()}
                   {m.action.label}
+                </button>
+              )}
+              {m.retryText && (
+                <button
+                  onClick={() => send(m.retryText)}
+                  disabled={sending}
+                  className="mt-1.5 text-xs font-bold underline"
+                  style={{ color: PALETTE.brand }}
+                >
+                  Try again
                 </button>
               )}
             </div>
@@ -194,12 +211,14 @@ export function ChatScreen({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
           placeholder="Type a question..."
+          aria-label="Message Easy"
           className="flex-1 px-4 py-3 text-sm outline-none"
           style={{ borderRadius: RADIUS.sm, border: `1px solid ${PALETTE.line}`, background: PALETTE.card }}
         />
         <button
           onClick={() => send()}
           disabled={!input.trim() || sending}
+          aria-label="Send message"
           className="btn-press flex items-center justify-center px-4 transition-colors duration-150"
           style={{ borderRadius: RADIUS.sm, background: input.trim() ? PALETTE.brand : PALETTE.line }}
         >

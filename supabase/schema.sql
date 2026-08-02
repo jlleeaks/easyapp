@@ -44,9 +44,18 @@ create table if not exists public.children (
   -- cumulative, plain-English "what we've learned about this child" (§6.1 macro-iteration)
   summary text not null default '',
 
+  -- structured, subject-taggable insights: [{ subject, text, source, created_at }]
+  -- fed by report-card/assignment intake and session check-ins, and read by every
+  -- generation prompt (briefings, suggestions) so recommendations are actually grounded.
+  strengths jsonb not null default '[]',
+  growth_areas jsonb not null default '[]',
+
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.children add column if not exists strengths jsonb not null default '[]';
+alter table public.children add column if not exists growth_areas jsonb not null default '[]';
 
 -- One row per completed homework/practice session.
 create table if not exists public.sessions (
@@ -240,3 +249,8 @@ create policy "books all own" on public.books
 alter table public.sessions drop constraint if exists sessions_source_check;
 alter table public.sessions add constraint sessions_source_check
   check (source in ('homework', 'practice', 'library'));
+
+-- Links a library-checkin session back to the specific book, so past insights
+-- ("what you noticed last time") can be reliably shown when a book is reopened.
+alter table public.sessions add column if not exists book_id uuid references public.books (id) on delete set null;
+create index if not exists sessions_book_id_idx on public.sessions (book_id);

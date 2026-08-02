@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { BOOK_SYSTEM, callClaude, childProfileForPrompt, parseJSON } from "@/lib/anthropic";
+import { BOOK_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
 import type { ChildProfile } from "@/lib/types";
 
 type BookGuide = {
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
   let guide: BookGuide | null = null;
   try {
-    const text = await callClaude({
+    guide = await callClaudeJSON<BookGuide>({
       system: BOOK_SYSTEM,
       userContent: [
         {
@@ -45,9 +45,8 @@ export async function POST(request: Request) {
           text: `Book: "${title.trim()}"${author?.trim() ? ` by ${author.trim()}` : ""}\nChild profile: ${JSON.stringify(childProfileForPrompt(child))}`,
         },
       ],
-      maxTokens: 700,
+      maxTokens: 900,
     });
-    guide = parseJSON<BookGuide>(text);
   } catch {
     guide = null;
   }

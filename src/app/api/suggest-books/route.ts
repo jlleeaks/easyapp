@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { SUGGEST_FOCUS_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
-import type { ChildProfile, Subject } from "@/lib/types";
+import { BOOK_SUGGEST_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
+import type { ChildProfile } from "@/lib/types";
 
-type Suggestion = { subject: Subject; focus: string; reason: string };
+type BookSuggestion = { title: string; author: string; theme: string; why: string };
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -30,15 +30,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Child not found." }, { status: 404 });
   }
 
-  const { data: skills } = await supabase.from("skills").select("subject, skill_name, stage").eq("child_id", childId);
+  const { data: books } = await supabase.from("books").select("title").eq("child_id", childId);
+  const ownedTitles = (books ?? []).map((b) => b.title);
 
   try {
-    const parsed = await callClaudeJSON<{ suggestions: Suggestion[] }>({
-      system: SUGGEST_FOCUS_SYSTEM,
+    const parsed = await callClaudeJSON<{ suggestions: BookSuggestion[] }>({
+      system: BOOK_SUGGEST_SYSTEM,
       userContent: [
         {
           type: "text",
-          text: `Child profile: ${JSON.stringify(childProfileForPrompt(child))}\nCurrently tracked skills: ${JSON.stringify(skills ?? [])}`,
+          text: `Child profile: ${JSON.stringify(childProfileForPrompt(child))}\nAlready on the shelf: ${JSON.stringify(ownedTitles)}`,
         },
       ],
       maxTokens: 900,

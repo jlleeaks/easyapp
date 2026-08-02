@@ -109,7 +109,7 @@ function Hero() {
 
         <p className="text-lg mx-auto mb-8" style={{ color: M.inkSoft, maxWidth: 560, lineHeight: 1.55 }}>
           Easy preps you before you teach, and coaches you through it — so you can be the confident teacher
-          your kid needs, without guessing. The AI never talks to your child. Not once.
+          your kid needs, without guessing. No live AI conversations with your child — ever.
         </p>
 
         <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
@@ -200,14 +200,14 @@ function PrincipleBand() {
           className="font-fraunces mb-4"
           style={{ fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 600, lineHeight: 1.15, color: "#fff" }}
         >
-          The AI never talks to your child.
+          No live AI conversations
           <br />
-          Not once.
+          with your child — ever.
         </p>
         <p className="text-base max-w-[46ch] mx-auto" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>
           Not in homework mode, not in bedtime stories, not when you&apos;re not in the room. Everything Easy
-          generates is reviewed and approved by you first — it&apos;s a smarter worksheet, never a chatbot for
-          your kid.
+          generates is reviewed by you first. If your child ever sees a screen, it&apos;s a static,
+          parent-approved activity — never an open-ended chat.
         </p>
       </div>
       <TornEdge fill={M.cream} flip />
@@ -270,7 +270,7 @@ function HowItWorks() {
     <section id="how-it-works" className="px-6 sm:px-8 py-16 sm:py-20">
       <div className="max-w-[1080px] mx-auto">
         <div className="text-center mb-12">
-          <Pill>Driven by design, not scores</Pill>
+          <Pill>Four steps, every night</Pill>
           <h2 className="font-fraunces mt-4" style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 600 }}>
             How Easy works
           </h2>
@@ -534,7 +534,7 @@ function Footer() {
           style={{ borderTop: `1px solid ${M.line}` }}
         >
           <p className="text-xs" style={{ color: M.inkFaint }}>
-            © 2026 Easy. Made for parents, not investors in your kid&apos;s screen time.
+            © 2026 Easy. Built to help you teach, not to keep your kid on a screen.
           </p>
         </div>
         <p

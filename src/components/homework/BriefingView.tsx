@@ -2,7 +2,7 @@
 
 import { Clock } from "lucide-react";
 import { PALETTE } from "@/lib/palette";
-import { Eyebrow, Card } from "@/components/ui/primitives";
+import { Eyebrow, Card, AiMarkdown } from "@/components/ui/primitives";
 import type { Briefing } from "@/lib/types";
 
 const DELAY = [0, 45, 90, 135, 180, 225, 270, 315, 360];
@@ -26,7 +26,9 @@ export function BriefingView({ briefing }: { briefing: Briefing }) {
       <Card delay={DELAY[0]}>
         <div className="p-5">
           <Eyebrow>Why it matters</Eyebrow>
-          <div className="text-sm">{briefing.why_it_matters}</div>
+          <div className="text-sm">
+            <AiMarkdown content={briefing.why_it_matters} />
+          </div>
         </div>
       </Card>
 
@@ -62,10 +64,13 @@ export function BriefingView({ briefing }: { briefing: Briefing }) {
       <Card delay={DELAY[4]}>
         <div className="p-5">
           <Eyebrow>If they get stuck</Eyebrow>
-          <div className="text-sm mb-2">{briefing.stuck_tip}</div>
+          <div className="text-sm mb-2">
+            <AiMarkdown content={briefing.stuck_tip} />
+          </div>
           {briefing.alternate_approach && (
             <div className="text-sm mb-2 pt-2" style={{ borderTop: `1px solid ${PALETTE.line}` }}>
-              <span className="font-semibold">Still not clicking?</span> {briefing.alternate_approach}
+              <span className="font-semibold">Still not clicking?</span>{" "}
+              <AiMarkdown content={briefing.alternate_approach} inline />
             </div>
           )}
           <div className="text-xs" style={{ color: PALETTE.inkSoft }}>
@@ -80,7 +85,9 @@ export function BriefingView({ briefing }: { briefing: Briefing }) {
         <Card accent="#F0C8B8" tint={PALETTE.accentSoft} delay={DELAY[5]}>
           <div className="p-5">
             <Eyebrow color={PALETTE.accent}>Watch for</Eyebrow>
-            <div className="text-sm">{briefing.watch_for}</div>
+            <div className="text-sm">
+              <AiMarkdown content={briefing.watch_for} />
+            </div>
           </div>
         </Card>
       )}
@@ -88,8 +95,12 @@ export function BriefingView({ briefing }: { briefing: Briefing }) {
       <Card delay={DELAY[6]}>
         <div className="p-5">
           <Eyebrow>How to deliver it</Eyebrow>
-          <div className="text-sm mb-2">🗣️ {briefing.praise_phrase}</div>
-          <div className="text-sm">🤝 {briefing.autonomy_tip}</div>
+          <div className="text-sm mb-2">
+            🗣️ <AiMarkdown content={briefing.praise_phrase} inline />
+          </div>
+          <div className="text-sm">
+            🤝 <AiMarkdown content={briefing.autonomy_tip} inline />
+          </div>
         </div>
       </Card>
 
@@ -97,7 +108,9 @@ export function BriefingView({ briefing }: { briefing: Briefing }) {
         <Card accent={PALETTE.brandLine} tint={PALETTE.brandSoft} delay={DELAY[7]}>
           <div className="p-5">
             <Eyebrow color={PALETTE.brand}>Keep it going this week</Eyebrow>
-            <div className="text-sm">{briefing.real_life_connection}</div>
+            <div className="text-sm">
+              <AiMarkdown content={briefing.real_life_connection} />
+            </div>
           </div>
         </Card>
       )}
@@ -106,7 +119,9 @@ export function BriefingView({ briefing }: { briefing: Briefing }) {
         <Card accent={PALETTE.brandLine} tint={PALETTE.brandSoft} delay={DELAY[8]}>
           <div className="p-5">
             <Eyebrow color={PALETTE.brand}>A note for you</Eyebrow>
-            <div className="text-sm">{briefing.math_anxiety_note}</div>
+            <div className="text-sm">
+              <AiMarkdown content={briefing.math_anxiety_note} />
+            </div>
           </div>
         </Card>
       )}

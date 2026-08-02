@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { buildDiagnosisSystem, callClaude, childProfileForPrompt, parseJSON } from "@/lib/anthropic";
+import { buildDiagnosisSystem, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
 import type { Briefing, ChildProfile, Subject } from "@/lib/types";
 
 const VALID_SUBJECTS: Subject[] = ["math", "writing", "reading"];
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     : "image/jpeg";
 
   try {
-    const text = await callClaude({
+    const briefing = await callClaudeJSON<Briefing>({
       system: buildDiagnosisSystem(safeSubject),
       userContent: [
         {
@@ -56,9 +56,9 @@ export async function POST(request: Request) {
           source: { type: "base64", media_type: safeMediaType, data: imageBase64 },
         },
       ],
+      maxTokens: 1500,
     });
 
-    const briefing = parseJSON<Briefing>(text);
     if (!briefing) {
       return NextResponse.json(
         { error: "Couldn't read the worksheet — try again." },

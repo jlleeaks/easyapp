@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, ChevronRight, ChevronLeft, Check, TrendingUp, Sparkles, PenLine, Save, BadgeCheck } from "lucide-react";
+import { Camera, ChevronRight, ChevronLeft, Check, TrendingUp, Sparkles, PenLine, Save } from "lucide-react";
 import { PALETTE, RADIUS } from "@/lib/palette";
 import { SUBJECTS, GRADE_CONTEXT, subjectMeta } from "@/lib/subjects";
 import {
@@ -16,10 +16,11 @@ import {
   TextField,
   Row,
   RowList,
-  Pill,
 } from "@/components/ui/primitives";
 import { AskEasyCard } from "@/components/ui/AskEasyCard";
+import { ReportIntakeCard } from "@/components/profile/ReportIntakeCard";
 import { BriefingView } from "@/components/homework/BriefingView";
+import { CompactBriefingView } from "@/components/homework/CompactBriefingView";
 import { BriefingSkeleton } from "@/components/homework/BriefingSkeleton";
 import type { Briefing, CheckinAnswers, Session, Subject } from "@/lib/types";
 
@@ -78,6 +79,8 @@ export function HomeworkHub({
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<string>("image/jpeg");
   const [briefing, setBriefing] = useState<Briefing | null>(null);
+  const [fullBriefing, setFullBriefing] = useState(false);
+  const [showBriefingWhileDelivering, setShowBriefingWhileDelivering] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkinAnswers, setCheckinAnswers] = useState<Partial<CheckinAnswers>>({});
   const [notes, setNotes] = useState("");
@@ -359,13 +362,20 @@ export function HomeworkHub({
 
           <div className="flex flex-col gap-4 min-w-0">
             <AskEasyCard prompt={`"What should we focus on in ${subject} this week?" — get a straight answer.`} />
+            <ReportIntakeCard
+              childId={childId}
+              childName={childName}
+              subject={subject}
+              intakeType="assignment"
+              title={`Add a graded ${meta.label.toLowerCase()} assignment`}
+              description={`Got a graded worksheet or test back? Add it here and Easy factors it straight into ${childName}'s ${subject} briefings.`}
+              placeholder="e.g. Got an A on the counting quiz but missed 2 questions on shape names..."
+              uploadLabel="Or attach a photo of the graded assignment"
+            />
             <Card style={{ marginBottom: 0 }}>
               <div className="p-5">
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <Eyebrow color={meta.color}>What kindergarten {subject} generally covers</Eyebrow>
-                  <Pill color={PALETTE.brand} soft={PALETTE.brandSoft}>
-                    <BadgeCheck size={12} /> Common Core aligned
-                  </Pill>
                 </div>
                 {GRADE_CONTEXT[subject].slice(0, 3).map((g) => (
                   <div key={g.title} className="mb-2 last:mb-0">
@@ -505,8 +515,17 @@ export function HomeworkHub({
   if (step === "briefing" && briefing) {
     return (
       <div className="animate-fade-in-up max-w-[640px] mx-auto">
-        <BriefingView briefing={briefing} />
-        <PrimaryButton onClick={() => setStep("delivering")} icon={Check}>Looks good — I&apos;m ready</PrimaryButton>
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={() => setFullBriefing((v) => !v)}
+            className="text-xs font-bold underline"
+            style={{ color: PALETTE.inkSoft }}
+          >
+            {fullBriefing ? "Show compact view" : "Show full briefing"}
+          </button>
+        </div>
+        {fullBriefing ? <BriefingView briefing={briefing} /> : <CompactBriefingView briefing={briefing} />}
+        <PrimaryButton onClick={() => setStep("delivering")} icon={Check}>Start the activity</PrimaryButton>
       </div>
     );
   }
@@ -531,7 +550,19 @@ export function HomeworkHub({
         <div className="mt-6 mb-2 font-serif-display" style={{ fontSize: 22, fontWeight: 700 }}>
           Go teach {childName} {briefing.skill.toLowerCase()}
         </div>
-        <div className="text-sm mb-8" style={{ color: PALETTE.inkSoft }}>No rush — check in here whenever you&apos;re done.</div>
+        <div className="text-sm mb-6" style={{ color: PALETTE.inkSoft }}>No rush — check in here whenever you&apos;re done.</div>
+        <button
+          onClick={() => setShowBriefingWhileDelivering((v) => !v)}
+          className="text-xs font-bold underline mb-8"
+          style={{ color: PALETTE.brand }}
+        >
+          {showBriefingWhileDelivering ? "Hide briefing" : "View briefing again"}
+        </button>
+        {showBriefingWhileDelivering && (
+          <div className="w-full text-left mb-8">
+            <CompactBriefingView briefing={briefing} />
+          </div>
+        )}
         <PrimaryButton onClick={() => setStep("checkin")}>We&apos;re all done</PrimaryButton>
       </div>
     );

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Camera, TrendingUp, ChevronRight, Check, Sparkles, BookOpen, Moon } from "lucide-react";
+import { Camera, TrendingUp, ChevronRight, Check, Sparkles, BookOpen } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PALETTE } from "@/lib/palette";
 import { Shell } from "@/components/ui/Shell";
@@ -9,8 +9,10 @@ import { AskEasyCard } from "@/components/ui/AskEasyCard";
 import { AchievementBadge } from "@/components/ui/AchievementBadge";
 import { WeekTracker } from "@/components/ui/WeekTracker";
 import { TonightSuggestionCard } from "@/components/ui/TonightSuggestionCard";
+import { StrengthsOverviewCard } from "@/components/ui/StrengthsOverviewCard";
 import { Hero } from "@/components/ui/Hero";
-import { computeStreak, thisWeekActivity } from "@/lib/streak";
+import { TonightNudgeBanner } from "@/components/ui/TonightNudgeBanner";
+import { LocalDateLabel } from "@/components/ui/LocalDateLabel";
 import type { ChildProfile, Session, Skill } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -57,31 +59,15 @@ export default async function DashboardPage() {
     .eq("child_id", child.id);
 
   const sessionDates = (sessions ?? []).map((s) => s.created_at);
-  const streak = computeStreak(sessionDates);
-  const week = thisWeekActivity(sessionDates);
-  const doneToday = week.find((d) => d.isToday)?.active ?? false;
 
   return (
     <Shell wide>
       <div className="flex items-center justify-between mb-6 sm:hidden">
         <Wordmark small />
       </div>
-      <Hero childName={child.name} parentName={parent?.name} streak={streak} sessionCount={sessionCount ?? 0} />
+      <Hero childName={child.name} parentName={parent?.name} sessionDates={sessionDates} sessionCount={sessionCount ?? 0} />
 
-      {!doneToday && (
-        <div
-          className="flex items-center gap-3 mb-5 px-4 py-3 rounded-2xl animate-fade-in-up"
-          style={{ background: PALETTE.goldSoft, border: `1px solid ${PALETTE.goldLine}` }}
-        >
-          <Moon size={16} color={PALETTE.gold} className="flex-shrink-0" />
-          <p className="text-sm font-semibold" style={{ color: "#8a5c10" }}>
-            {child.name}
-            {" "}
-            hasn&apos;t done tonight&apos;s session yet
-            {streak > 0 ? ` — pick one below to keep the ${streak}-day streak going.` : " — pick one below to get started."}
-          </p>
-        </div>
-      )}
+      <TonightNudgeBanner childName={child.name} sessionDates={sessionDates} />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_336px] gap-5 items-start">
         <div className="flex flex-col gap-5 min-w-0">
@@ -118,6 +104,8 @@ export default async function DashboardPage() {
             />
           </div>
 
+          <StrengthsOverviewCard childName={child.name} strengths={child.strengths ?? []} growthAreas={child.growth_areas ?? []} />
+
           <TonightSuggestionCard childId={child.id} />
 
           {sessions && sessions.length > 0 && (
@@ -134,7 +122,7 @@ export default async function DashboardPage() {
                 {sessions.map((s) => (
                   <Row
                     key={s.id}
-                    href={s.source === "library" ? "/library" : `/homework?subject=${s.subject}&session=${s.id}`}
+                    href={s.source === "library" ? (s.book_id ? `/library?book=${s.book_id}` : "/library") : `/homework?subject=${s.subject}&session=${s.id}`}
                     icon={s.source === "library" ? <BookOpen size={16} /> : <Check size={16} />}
                     iconColor={PALETTE.brand}
                     iconSoft={PALETTE.brandSoft}
@@ -143,7 +131,7 @@ export default async function DashboardPage() {
                     trailing={
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <span className="text-xs font-semibold" style={{ color: PALETTE.inkSoft }}>
-                          {new Date(s.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                          <LocalDateLabel iso={s.created_at} />
                         </span>
                         <ChevronRight size={16} color={PALETTE.inkFaint} />
                       </div>
@@ -158,7 +146,7 @@ export default async function DashboardPage() {
         <div className="flex flex-col gap-4 min-w-0">
           <AskEasyCard />
 
-          <WeekTracker days={week} />
+          <WeekTracker sessionDates={sessionDates} />
 
           {featuredSkill && (
             <AchievementBadge
@@ -169,7 +157,7 @@ export default async function DashboardPage() {
                   ? sessions[0].micro_message.length > 60
                     ? sessions[0].micro_message.slice(0, 57) + "…"
                     : sessions[0].micro_message
-                  : "Real, verified progress — keep showing up and it'll keep growing."
+                  : "Keep showing up and this will start filling in."
               }
             />
           )}

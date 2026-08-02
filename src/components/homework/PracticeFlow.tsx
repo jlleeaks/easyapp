@@ -15,6 +15,7 @@ import {
   TextField,
 } from "@/components/ui/primitives";
 import { BriefingView } from "@/components/homework/BriefingView";
+import { CompactBriefingView } from "@/components/homework/CompactBriefingView";
 import { BriefingSkeleton } from "@/components/homework/BriefingSkeleton";
 import type { Briefing, CheckinAnswers, Subject } from "@/lib/types";
 
@@ -48,6 +49,8 @@ export function PracticeFlow({
   const [subject, setSubject] = useState<Subject>("math");
   const [focus, setFocus] = useState("");
   const [briefing, setBriefing] = useState<Briefing | null>(null);
+  const [fullBriefing, setFullBriefing] = useState(false);
+  const [showBriefingWhileDelivering, setShowBriefingWhileDelivering] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkinAnswers, setCheckinAnswers] = useState<Partial<CheckinAnswers>>({});
   const [notes, setNotes] = useState("");
@@ -232,8 +235,17 @@ export function PracticeFlow({
   if (step === "briefing" && briefing) {
     return (
       <div className="animate-fade-in-up">
-        <BriefingView briefing={briefing} />
-        <PrimaryButton onClick={() => setStep("delivering")} icon={Check}>Looks good — I&apos;m ready</PrimaryButton>
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={() => setFullBriefing((v) => !v)}
+            className="text-xs font-bold underline"
+            style={{ color: PALETTE.inkSoft }}
+          >
+            {fullBriefing ? "Show compact view" : "Show full briefing"}
+          </button>
+        </div>
+        {fullBriefing ? <BriefingView briefing={briefing} /> : <CompactBriefingView briefing={briefing} />}
+        <PrimaryButton onClick={() => setStep("delivering")} icon={Check}>Start the activity</PrimaryButton>
       </div>
     );
   }
@@ -258,7 +270,19 @@ export function PracticeFlow({
         <div className="mt-6 mb-2 font-serif-display" style={{ fontSize: 22, fontWeight: 700 }}>
           Go teach {childName} {(focus || briefing.skill).toLowerCase()}
         </div>
-        <div className="text-sm mb-8" style={{ color: PALETTE.inkSoft }}>No rush — check in here whenever you&apos;re done.</div>
+        <div className="text-sm mb-6" style={{ color: PALETTE.inkSoft }}>No rush — check in here whenever you&apos;re done.</div>
+        <button
+          onClick={() => setShowBriefingWhileDelivering((v) => !v)}
+          className="text-xs font-bold underline mb-8"
+          style={{ color: PALETTE.brand }}
+        >
+          {showBriefingWhileDelivering ? "Hide briefing" : "View briefing again"}
+        </button>
+        {showBriefingWhileDelivering && (
+          <div className="w-full text-left mb-8">
+            <CompactBriefingView briefing={briefing} />
+          </div>
+        )}
         <PrimaryButton onClick={() => setStep("checkin")}>We&apos;re all done</PrimaryButton>
       </div>
     );

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Camera, ClipboardList, Check } from "lucide-react";
 import { PALETTE, RADIUS } from "@/lib/palette";
 import { Eyebrow, Card, PrimaryButton, LoadingBlock } from "@/components/ui/primitives";
+import type { Subject } from "@/lib/types";
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -15,8 +16,27 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-export function ReportIntakeCard({ childId, childName }: { childId: string; childName: string }) {
+export function ReportIntakeCard({
+  childId,
+  childName,
+  subject,
+  intakeType = "report_card",
+  title = "Give Easy a head start",
+  description,
+  placeholder = "e.g. Teacher said she's strong with sight words but rushes through math without checking her work...",
+  uploadLabel = "Or attach a photo of a report card",
+}: {
+  childId: string;
+  childName: string;
+  subject?: Subject;
+  intakeType?: "report_card" | "assignment";
+  title?: string;
+  description?: string;
+  placeholder?: string;
+  uploadLabel?: string;
+}) {
   const router = useRouter();
+  const inputId = `intake-upload-${subject ?? "general"}-${intakeType}`;
   const [notes, setNotes] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -42,7 +62,7 @@ export function ReportIntakeCard({ childId, childName }: { childId: string; chil
       const res = await fetch("/api/intake-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ childId, notes, imageBase64, mediaType }),
+        body: JSON.stringify({ childId, notes, imageBase64, mediaType, subject, intakeType }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -62,15 +82,15 @@ export function ReportIntakeCard({ childId, childName }: { childId: string; chil
   }
 
   return (
-    <Card>
+    <Card style={{ marginBottom: 0 }}>
       <div className="p-5">
         <div className="flex items-center gap-1.5 mb-1">
           <ClipboardList size={13} color={PALETTE.brand} />
-          <Eyebrow color={PALETTE.brand}>Give Easy a head start</Eyebrow>
+          <Eyebrow color={PALETTE.brand}>{title}</Eyebrow>
         </div>
         <p className="text-sm mb-4" style={{ color: PALETTE.inkSoft }}>
-          Got a report card, recent schoolwork, or just something a teacher told you? Add it here and
-          Easy folds it straight into what it already knows about {childName}.
+          {description ??
+            `Got a report card, recent schoolwork, or just something a teacher told you? Add it here and Easy folds it straight into what it already knows about ${childName}.`}
         </p>
 
         {result ? (
@@ -119,24 +139,24 @@ export function ReportIntakeCard({ childId, childName }: { childId: string; chil
           <>
             {imagePreview && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={imagePreview} alt="report card preview" className="w-full rounded-xl mb-3" />
+              <img src={imagePreview} alt="upload preview" className="w-full rounded-xl mb-3" />
             )}
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Teacher said she's strong with sight words but rushes through math without checking her work..."
+              placeholder={placeholder}
               rows={3}
               className="w-full px-3.5 py-2.5 text-sm outline-none mb-3"
               style={{ borderRadius: RADIUS.sm, border: `1px solid ${PALETTE.line}`, background: PALETTE.card }}
             />
             <label className="block mb-3">
-              <input type="file" accept="image/*" onChange={handleFile} className="hidden" id="report-upload" />
+              <input type="file" accept="image/*" onChange={handleFile} className="hidden" id={inputId} />
               <div
-                onClick={() => document.getElementById("report-upload")?.click()}
+                onClick={() => document.getElementById(inputId)?.click()}
                 className="btn-press flex items-center justify-center gap-2 w-full text-center py-2.5 text-sm cursor-pointer font-medium transition-all duration-150"
                 style={{ borderRadius: RADIUS.sm, border: `1px solid ${PALETTE.line}` }}
               >
-                <Camera size={15} /> {imagePreview ? "Choose a different photo" : "Or attach a photo of a report card"}
+                <Camera size={15} /> {imagePreview ? "Choose a different photo" : uploadLabel}
               </div>
             </label>
             {error && (

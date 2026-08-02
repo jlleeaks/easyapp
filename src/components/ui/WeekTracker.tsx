@@ -3,14 +3,16 @@
 import { Flame } from "lucide-react";
 import { PALETTE } from "@/lib/palette";
 import { Card } from "@/components/ui/primitives";
+import { thisWeekActivity } from "@/lib/streak";
 
 export function WeekTracker({
-  days,
+  sessionDates,
   delay,
 }: {
-  days: { label: string; active: boolean; isToday: boolean }[];
+  sessionDates: string[];
   delay?: number;
 }) {
+  const days = thisWeekActivity(sessionDates);
   return (
     <Card accent={PALETTE.brandLine} tint={PALETTE.brandSoft} delay={delay} style={{ marginBottom: 0, height: "100%" }}>
       <div className="p-[1.15rem] h-full flex flex-col">

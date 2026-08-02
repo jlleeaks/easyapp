@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { ITERATION_SYSTEM, callClaude, childProfileForPrompt, parseJSON } from "@/lib/anthropic";
+import { ITERATION_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
 import type { Briefing, CheckinAnswers, ChildProfile, Subject } from "@/lib/types";
 import type { SkillStage } from "@/lib/palette";
 import { SKILL_STAGES } from "@/lib/palette";
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const text = await callClaude({
+    const parsed = await callClaudeJSON<IterationResult>({
       system: ITERATION_SYSTEM,
       userContent: [
         {
@@ -56,10 +56,9 @@ export async function POST(request: Request) {
           text: `Child profile: ${JSON.stringify(childProfileForPrompt(child))}\nSubject: ${safeSubject}\nSkill taught tonight: ${briefing.skill}\nPrevious cumulative summary: ${child.summary || "none yet"}\nParent's check-in answers: ${JSON.stringify(checkin)}`,
         },
       ],
-      maxTokens: 600,
+      maxTokens: 900,
     });
 
-    const parsed = parseJSON<IterationResult>(text);
     if (!parsed || !SKILL_STAGES.includes(parsed.skill_status)) {
       return NextResponse.json(
         { error: "Couldn't process that check-in — try again." },

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { CHAT_SYSTEM, callClaudeConversation, childProfileForPrompt, parseJSON } from "@/lib/anthropic";
+import { CHAT_SYSTEM, callClaudeConversationJSON, childProfileForPrompt } from "@/lib/anthropic";
 import type { ChatAction, ChatMessage, ChildProfile } from "@/lib/types";
 
 type ChatReply = { reply: string; action: ChatAction };
@@ -52,12 +52,12 @@ export async function POST(request: Request) {
       .reverse()
       .map((m) => ({ role: m.role, content: m.content }));
 
-    const text = await callClaudeConversation({
+    const parsed = await callClaudeConversationJSON<ChatReply>({
       system: `${CHAT_SYSTEM}\n\nChild profile for context: ${JSON.stringify(childProfileForPrompt(child))}`,
       messages: [...priorTurns, { role: "user" as const, content: message.trim() }],
+      maxTokens: 1000,
     });
 
-    const parsed = parseJSON<ChatReply>(text);
     const reply = parsed?.reply || "Sorry, I didn't catch that — could you try rephrasing?";
     const action = parsed?.action ?? null;
 

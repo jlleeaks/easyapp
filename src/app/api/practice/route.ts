@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { buildPracticeSystem, callClaude, childProfileForPrompt, parseJSON } from "@/lib/anthropic";
+import { buildPracticeSystem, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
 import type { Briefing, ChildProfile, Subject } from "@/lib/types";
 
 const VALID_SUBJECTS: Subject[] = ["math", "writing", "reading"];
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const text = await callClaude({
+    const briefing = await callClaudeJSON<Briefing>({
       system: buildPracticeSystem(safeSubject),
       userContent: [
         {
@@ -47,9 +47,9 @@ export async function POST(request: Request) {
           text: `Child profile: ${JSON.stringify(childProfileForPrompt(child))}\nTonight's ${safeSubject} focus: ${topic}${reason ? `\nWhy this, tonight: ${reason}` : ""}`,
         },
       ],
+      maxTokens: 1500,
     });
 
-    const briefing = parseJSON<Briefing>(text);
     if (!briefing) {
       return NextResponse.json({ error: "Couldn't build that lesson — try again." }, { status: 502 });
     }

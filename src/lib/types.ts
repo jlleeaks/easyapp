@@ -25,13 +25,22 @@ export type ChildProfile = {
   doesnt_work: string | null;
   math_anxiety: string | null;
   summary: string;
+  strengths: ProfileInsight[];
+  growth_areas: ProfileInsight[];
   created_at: string;
   updated_at: string;
 };
 
+export type ProfileInsight = {
+  subject: Subject | "general";
+  text: string;
+  source: "report_card" | "assignment" | "session";
+  created_at: string;
+};
+
 export type ChildProfileInput = Omit<
   ChildProfile,
-  "id" | "parent_id" | "summary" | "created_at" | "updated_at"
+  "id" | "parent_id" | "summary" | "strengths" | "growth_areas" | "created_at" | "updated_at"
 >;
 
 export const EMPTY_CHILD_PROFILE: ChildProfileInput = {
@@ -102,6 +111,7 @@ export type Session = {
   checkin: CheckinAnswers | LibraryCheckinAnswers | null;
   micro_message: string | null;
   parent_notes: string | null;
+  book_id: string | null;
   created_at: string;
 };
 
@@ -139,4 +149,6 @@ export type ChatMessage = {
   content: string;
   action: ChatAction;
   created_at: string;
+  /** Not persisted — set on local error messages so the UI can offer a retry of the original text. */
+  retryText?: string;
 };

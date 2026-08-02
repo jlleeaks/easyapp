@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { ITERATION_SYSTEM, callClaude, childProfileForPrompt, parseJSON } from "@/lib/anthropic";
+import { ITERATION_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
 import type { Briefing, ChildProfile, LibraryCheckinAnswers } from "@/lib/types";
 import type { SkillStage } from "@/lib/palette";
 import { SKILL_STAGES } from "@/lib/palette";
@@ -21,8 +21,9 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { childId, bookTitle, bookAuthor, whatItTeaches, checkin } = body as {
+  const { childId, bookId, bookTitle, bookAuthor, whatItTeaches, checkin } = body as {
     childId: string;
+    bookId?: string | null;
     bookTitle: string;
     bookAuthor?: string | null;
     whatItTeaches?: string | null;
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const text = await callClaude({
+    const parsed = await callClaudeJSON<IterationResult>({
       system: ITERATION_SYSTEM,
       userContent: [
         {
@@ -53,10 +54,9 @@ export async function POST(request: Request) {
           text: `Child profile: ${JSON.stringify(childProfileForPrompt(child))}\nSubject: reading (bedtime story)\nBook read tonight: ${bookTitle}${bookAuthor ? ` by ${bookAuthor}` : ""}\nPrevious cumulative summary: ${child.summary || "none yet"}\nParent's check-in answers: ${JSON.stringify(checkin)}`,
         },
       ],
-      maxTokens: 600,
+      maxTokens: 900,
     });
 
-    const parsed = parseJSON<IterationResult>(text);
     if (!parsed || !SKILL_STAGES.includes(parsed.skill_status)) {
       return NextResponse.json({ error: "Couldn't process that check-in — try again." }, { status: 502 });
     }
@@ -88,6 +88,7 @@ export async function POST(request: Request) {
         briefing,
         checkin,
         micro_message: parsed.micro_message,
+        book_id: bookId ?? null,
       })
       .select("id")
       .single();

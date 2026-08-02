@@ -3,7 +3,38 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Loader2, AlertCircle, Check, type LucideIcon } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { PALETTE, RADIUS } from "@/lib/palette";
+
+export function AiMarkdown({
+  content,
+  className,
+  inline,
+}: {
+  content: string;
+  className?: string;
+  inline?: boolean;
+}) {
+  const Wrapper = inline ? "span" : "div";
+  return (
+    <Wrapper className={`chat-markdown${className ? ` ${className}` : ""}`}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          table: ({ children }) => (
+            <div className="chat-table-wrap">
+              <table>{children}</table>
+            </div>
+          ),
+          ...(inline ? { p: ({ children }) => <>{children}</> } : {}),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </Wrapper>
+  );
+}
 
 export function Wordmark({ small }: { small?: boolean }) {
   return (

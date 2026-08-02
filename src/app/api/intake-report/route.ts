@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { REPORT_INTAKE_SYSTEM, callClaude, childProfileForPrompt, parseJSON } from "@/lib/anthropic";
-import type { ChildProfile } from "@/lib/types";
+import { REPORT_INTAKE_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
+import type { ChildProfile, ProfileInsight, Subject } from "@/lib/types";
 import type Anthropic from "@anthropic-ai/sdk";
 
 type IntakeResult = {
@@ -9,6 +9,9 @@ type IntakeResult = {
   strengths: string[];
   growth_areas: string[];
 };
+
+const VALID_SUBJECTS: Subject[] = ["math", "writing", "reading"];
+const MAX_INSIGHTS = 30;
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -20,16 +23,20 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { childId, notes, imageBase64, mediaType } = body as {
+  const { childId, notes, imageBase64, mediaType, subject, intakeType } = body as {
     childId: string;
     notes?: string;
     imageBase64?: string;
     mediaType?: string;
+    subject?: string;
+    intakeType?: "report_card" | "assignment";
   };
 
   if (!childId || (!notes?.trim() && !imageBase64)) {
     return NextResponse.json({ error: "Add a note or a photo first." }, { status: 400 });
   }
+  const safeSubject: Subject | "general" = VALID_SUBJECTS.includes(subject as Subject) ? (subject as Subject) : "general";
+  const source: ProfileInsight["source"] = intakeType === "assignment" ? "assignment" : "report_card";
 
   const { data: child, error: childError } = await supabase
     .from("children")
@@ -51,7 +58,7 @@ export async function POST(request: Request) {
     const userContent: Anthropic.MessageParam["content"] = [
       {
         type: "text",
-        text: `Child profile: ${JSON.stringify(childProfileForPrompt(child))}\nExisting cumulative summary: ${child.summary || "none yet"}\n${notes?.trim() ? `Parent's notes: ${notes.trim()}` : "The parent attached a photo instead of typing notes."}`,
+        text: `Child profile: ${JSON.stringify(childProfileForPrompt(child))}\nExisting cumulative summary: ${child.summary || "none yet"}\n${safeSubject !== "general" ? `This input is specifically about the subject: ${safeSubject}.\n` : ""}${notes?.trim() ? `Parent's notes: ${notes.trim()}` : "The parent attached a photo instead of typing notes."}`,
       },
     ];
     if (imageBase64) {
@@ -61,15 +68,35 @@ export async function POST(request: Request) {
       });
     }
 
-    const text = await callClaude({ system: REPORT_INTAKE_SYSTEM, userContent, maxTokens: 700 });
-    const parsed = parseJSON<IntakeResult>(text);
+    const parsed = await callClaudeJSON<IntakeResult>({ system: REPORT_INTAKE_SYSTEM, userContent, maxTokens: 900 });
     if (!parsed) {
       return NextResponse.json({ error: "Couldn't make sense of that — try again." }, { status: 502 });
     }
 
+    const now = new Date().toISOString();
+    const newStrengths: ProfileInsight[] = (parsed.strengths ?? []).map((text) => ({
+      subject: safeSubject,
+      text,
+      source,
+      created_at: now,
+    }));
+    const newGrowthAreas: ProfileInsight[] = (parsed.growth_areas ?? []).map((text) => ({
+      subject: safeSubject,
+      text,
+      source,
+      created_at: now,
+    }));
+
+    const mergedStrengths = [...newStrengths, ...(child.strengths ?? [])].slice(0, MAX_INSIGHTS);
+    const mergedGrowthAreas = [...newGrowthAreas, ...(child.growth_areas ?? [])].slice(0, MAX_INSIGHTS);
+
     const { error: updateError } = await supabase
       .from("children")
-      .update({ summary: parsed.updated_summary })
+      .update({
+        summary: parsed.updated_summary,
+        strengths: mergedStrengths,
+        growth_areas: mergedGrowthAreas,
+      })
       .eq("id", childId);
     if (updateError) throw updateError;
 

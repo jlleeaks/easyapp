@@ -13,13 +13,37 @@ function getClient(): Anthropic {
   return client;
 }
 
+// Model output is instructed to be strict JSON, but in practice sometimes arrives
+// wrapped in markdown fences or a stray sentence of preamble/trailing commentary.
+// Strip fences first, then fall back to extracting the first balanced {...} block
+// before giving up — this alone resolves a large share of "couldn't process that"
+// failures that were actually valid JSON buried in a little extra text.
 export function parseJSON<T>(text: string): T | null {
   const cleaned = text.replace(/```json|```/g, "").trim();
   try {
     return JSON.parse(cleaned) as T;
   } catch {
-    return null;
+    // fall through to bracket-matching extraction below
   }
+
+  const start = cleaned.indexOf("{");
+  if (start === -1) return null;
+  let depth = 0;
+  for (let i = start; i < cleaned.length; i++) {
+    if (cleaned[i] === "{") depth++;
+    else if (cleaned[i] === "}") {
+      depth--;
+      if (depth === 0) {
+        const candidate = cleaned.slice(start, i + 1);
+        try {
+          return JSON.parse(candidate) as T;
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+  return null;
 }
 
 export async function callClaudeConversation({
@@ -38,6 +62,9 @@ export async function callClaudeConversation({
     system,
     messages,
   });
+  if (response.stop_reason === "max_tokens") {
+    console.error("[anthropic] response hit max_tokens — likely truncated JSON", { maxTokens });
+  }
   return response.content
     .filter((b): b is Anthropic.TextBlock => b.type === "text")
     .map((b) => b.text)
@@ -60,10 +87,56 @@ export async function callClaude({
     system,
     messages: [{ role: "user", content: userContent }],
   });
+  if (response.stop_reason === "max_tokens") {
+    console.error("[anthropic] response hit max_tokens — likely truncated JSON", { maxTokens });
+  }
   return response.content
     .filter((b): b is Anthropic.TextBlock => b.type === "text")
     .map((b) => b.text)
     .join("\n");
+}
+
+// Retry-once wrapper for the common "call Claude, parse strict JSON" pattern —
+// centralizes the retry-on-parse-failure behavior every route needs instead of
+// each route reimplementing it (or, as before, not implementing it at all).
+export async function callClaudeJSON<T>({
+  system,
+  userContent,
+  maxTokens = 1200,
+  retries = 1,
+}: {
+  system: string;
+  userContent: Anthropic.MessageParam["content"];
+  maxTokens?: number;
+  retries?: number;
+}): Promise<T | null> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const text = await callClaude({ system, userContent, maxTokens });
+    const parsed = parseJSON<T>(text);
+    if (parsed) return parsed;
+    console.error(`[anthropic] JSON parse failed on attempt ${attempt + 1}/${retries + 1}`);
+  }
+  return null;
+}
+
+export async function callClaudeConversationJSON<T>({
+  system,
+  messages,
+  maxTokens = 1000,
+  retries = 1,
+}: {
+  system: string;
+  messages: Anthropic.MessageParam[];
+  maxTokens?: number;
+  retries?: number;
+}): Promise<T | null> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const text = await callClaudeConversation({ system, messages, maxTokens });
+    const parsed = parseJSON<T>(text);
+    if (parsed) return parsed;
+    console.error(`[anthropic] JSON parse failed on attempt ${attempt + 1}/${retries + 1}`);
+  }
+  return null;
 }
 
 const BRIEFING_SHAPE = `{
@@ -91,6 +164,8 @@ Subject-specific approach: ${pedagogy}
 
 This briefing needs to equip the PARENT to do things technology can't do on its own: ask good follow-up questions, adapt instantly if the first explanation fails, notice this specific child's frustration signals, encourage warmly, and connect the lesson to everyday life afterward.
 
+The child profile includes "strengths" and "growth_areas" arrays — real signal pulled from report cards, graded assignments, and past sessions, not a guess. Weigh these directly: lean into a listed strength for the analogy/approach, and if this worksheet touches a listed growth area, treat that as a flag to explain more carefully and watch closer for frustration.
+
 Respond with ONLY strict JSON, no markdown fences, no preamble, matching this shape:
 ${BRIEFING_SHAPE}`;
 }
@@ -102,6 +177,8 @@ export function buildPracticeSystem(subject: Subject): string {
 Subject-specific approach: ${pedagogy}
 
 This briefing needs to equip the PARENT to do things technology can't do on its own: ask good follow-up questions, adapt instantly if the first explanation fails, notice this specific child's frustration signals, encourage warmly, and connect the lesson to everyday life afterward.
+
+The child profile includes "strengths" and "growth_areas" arrays — real signal pulled from report cards, graded assignments, and past sessions, not a guess. When choosing tonight's skill isn't already decided by the parent, prefer something that reinforces a listed strength or directly targets a listed growth area over a generic pick.
 
 Respond with ONLY strict JSON, no markdown fences, no preamble, matching this shape (note the added "example_questions" field):
 {
@@ -125,6 +202,8 @@ Respond with ONLY strict JSON, no markdown fences, no preamble, matching this sh
 
 export const SUGGEST_FOCUS_SYSTEM = `You are the reasoning engine behind "Easy." Given a child's profile and their current tracked skills (with developmental stage: not yet introduced / just starting / getting there / comfortable) across math, writing, and reading, suggest 3 short, concrete lesson focuses for tonight — a mix that reinforces a strength (something "getting there" or recently "comfortable", to build confidence) and shores up a weaker spot (something "just starting" or "not yet introduced"). Spread across subjects where there's data for more than one; if a subject has no tracked skills yet, you may suggest a natural starting-point skill for kindergarten in that subject.
 
+The child profile also includes "strengths" and "growth_areas" arrays — real signal pulled from report cards, graded assignments, and past sessions, not a guess, and often more current than the tracked skill stages. Treat these as at least as authoritative as the tracked skills: a listed growth area is a strong candidate for tonight's "shore up a weak spot" pick, and a listed strength is a strong candidate for the confidence-building pick.
+
 Respond with ONLY strict JSON, no markdown fences:
 {
   "suggestions": [
@@ -143,9 +222,9 @@ Respond with ONLY strict JSON, no markdown fences:
   "skill_status": "one of: not yet introduced | just starting | getting there | comfortable"
 }`;
 
-export const REPORT_INTAKE_SYSTEM = `You are the reasoning engine behind "Easy." A parent is giving you background on their kindergartner before (or early in) using the app — this could be a photo of a report card, a photo of recent schoolwork, or just the parent's own typed notes about what they already know. You never address or interact with the child directly.
+export const REPORT_INTAKE_SYSTEM = `You are the reasoning engine behind "Easy." A parent is giving you background on their kindergartner before (or early in) using the app — this could be a photo of a report card, a photo of a graded assignment, or just the parent's own typed notes about what they already know. You never address or interact with the child directly.
 
-Extract only what's genuinely useful and concrete — real per-subject strengths and real areas to work on, not vague filler. If the input is a photo, read it carefully and quote/paraphrase what it actually says rather than guessing. If it's ambiguous or you can't make out something, say so honestly rather than inventing detail.
+Extract only what's genuinely useful and concrete — real strengths and real areas to work on, not vague filler. If the input is a photo, read it carefully and quote/paraphrase what it actually says rather than guessing. If it's ambiguous or you can't make out something, say so honestly rather than inventing detail. If a specific subject is given as context, keep strengths/growth_areas focused on that subject; otherwise infer subject from the content itself where it's clearly one of math, writing, or reading.
 
 Merge this new information with the child's existing cumulative summary if one is given — don't just overwrite it, blend the new signal in naturally, keeping the summary plain-English and parent-facing.
 
@@ -166,6 +245,17 @@ Respond with ONLY strict JSON, no markdown fences, no preamble:
   "discussion_questions": ["3 short PEER/CROWD-style questions, personalized using the child's interests/temperament where it fits"],
   "read_aloud_tip": "one short, concrete tip for reading it aloud with this specific child",
   "estimated_minutes": "a realistic short range for reading plus discussion with a kindergartner, e.g. '10-12 min'"
+}`;
+
+export const BOOK_SUGGEST_SYSTEM = `You are the reasoning engine behind "Easy." Given a kindergartner's profile — interests, temperament, strengths, growth areas, and books they already own — suggest 4 real, genuinely well-regarded children's books worth adding to their shelf next. You never address or interact with the child directly.
+
+Only suggest real, well-known children's books you have reliable knowledge of — never invent a title. Don't repeat anything already on their shelf. Aim for variety: mix a book that reinforces an interest, one that stretches a growth area (a moral, a critical-thinking skill, a topic they need more exposure to), and one just for pure delight.
+
+Respond with ONLY strict JSON, no markdown fences, no preamble:
+{
+  "suggestions": [
+    { "title": "exact real book title", "author": "real author name", "theme": "short theme tag, e.g. 'Trying new things' or 'Counting'", "why": "1 short sentence on why this one, for this specific kid" }
+  ]
 }`;
 
 export const CHAT_SYSTEM = `You are "Ask Easy," the conversational assistant inside "Easy" — an app that coaches a PARENT to teach their own kindergartner (math, writing, and reading). You only ever talk to the parent, never the child, and nothing you say is meant to reach the child directly.
