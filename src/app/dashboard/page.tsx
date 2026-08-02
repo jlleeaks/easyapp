@@ -9,8 +9,9 @@ import { HomeGreeting } from "@/components/ui/HomeGreeting";
 import { TonightActivityHero, SecondaryActionTile } from "@/components/ui/TonightActivityCard";
 import { NoticingStrip } from "@/components/ui/NoticingStrip";
 import { ContinueLastTime } from "@/components/ui/ContinueLastTime";
+import { ThisWeekCard } from "@/components/ui/ThisWeekCard";
 import { getTonightSuggestions } from "@/lib/suggestions";
-import { areaForFocusText } from "@/lib/roadmap";
+import { areaForFocusText, computeRoadmap } from "@/lib/roadmap";
 import type { ChildProfile, Session, Skill } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -59,6 +60,24 @@ export default async function DashboardPage() {
   const patterns = child.learning_patterns ?? [];
   const noticing = patterns.length > 0 ? patterns[0] : null;
 
+  // "This week" summary — grounded in the same roadmap engine Progress uses, so
+  // Home never states a subject/state that Progress would contradict.
+  const weekCutoff = new Date().getTime() - 7 * 24 * 60 * 60 * 1000;
+  const activitiesThisWeek = sessions.filter((s) => new Date(s.created_at).getTime() >= weekCutoff).length;
+
+  const roadmap = computeRoadmap({
+    skills: skills ?? [],
+    sessions,
+    strengths: child.strengths ?? [],
+    growthAreas: child.growth_areas ?? [],
+  });
+  const withEvidence = roadmap.filter((a) => a.evidence.length > 0);
+  const notYetComfortable = withEvidence.filter((a) => a.state !== "comfortable" && a.state !== "ready_to_extend");
+  const focusItem =
+    [...notYetComfortable].sort((a, b) => b.evidence.length - a.evidence.length)[0] ??
+    [...withEvidence].sort((a, b) => b.evidence.length - a.evidence.length)[0] ??
+    null;
+
   return (
     <Shell wide>
       <div className="flex items-center justify-between mb-6 sm:hidden">
@@ -67,30 +86,34 @@ export default async function DashboardPage() {
 
       <HomeGreeting parentName={parent?.name} childName={child.name} />
 
-      <TonightActivityHero childName={child.name} suggestion={suggestion} area={suggestionArea} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-2">
+          <TonightActivityHero childName={child.name} suggestion={suggestion} area={suggestionArea} />
+        </div>
+        <ThisWeekCard
+          childName={child.name}
+          activitiesThisWeek={activitiesThisWeek}
+          focusSubject={focusItem?.area.subject ?? null}
+          focusState={focusItem?.state ?? null}
+          nextFocusLabel={focusItem?.area.area ?? null}
+        />
+      </div>
 
-      <div className="mt-5">
-        <p className="text-xs font-bold uppercase mb-2.5 px-1" style={{ color: PALETTE.inkFaint, letterSpacing: "0.06em" }}>
-          Something else tonight?
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-5">
         <div className="flex flex-wrap gap-2.5">
           <SecondaryActionTile href="/homework" icon={<Camera size={16} />} label="Upload homework" />
           <SecondaryActionTile href="/practice" icon={<Sparkles size={16} />} label="Choose another activity" />
           <SecondaryActionTile href="/library" icon={<BookOpen size={16} />} label="Read together" />
         </div>
+        <Link href="/chat" className="text-xs font-bold underline whitespace-nowrap" style={{ color: PALETTE.brand }}>
+          Not sure what {child.name} needs? Ask Easy
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
         <NoticingStrip pattern={noticing} />
         <ContinueLastTime session={continuation} />
       </div>
-
-      <p className="text-xs text-center mt-6" style={{ color: PALETTE.inkFaint }}>
-        Not sure what {child.name} needs?{" "}
-        <Link href="/chat" className="font-bold underline" style={{ color: PALETTE.brand }}>
-          Ask Easy
-        </Link>
-      </p>
     </Shell>
   );
 }

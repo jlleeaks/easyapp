@@ -19,6 +19,40 @@ const STARTERS = [
   "What if she refuses tonight?",
 ];
 
+const ASK_EASY_PROMPTS = [
+  "How do I explain “more than” simply?",
+  "She won't sit still for homework — any tips?",
+  "How much reading is enough at this age?",
+  "He gets frustrated and shuts down — how do I help?",
+  "What should we focus on with her this week?",
+  "How do I make math practice feel like a game?",
+];
+
+function AskSuggestionsPanel({ onPick }: { onPick: (text: string) => void }) {
+  return (
+    <div
+      className="rounded-3xl p-5 lg:sticky lg:top-0"
+      style={{ background: PALETTE.card, border: `1px solid ${PALETTE.line}` }}
+    >
+      <p className="text-xs font-bold uppercase mb-3" style={{ color: PALETTE.inkFaint, letterSpacing: "0.06em" }}>
+        Things you can ask Easy
+      </p>
+      <div className="flex flex-col gap-2">
+        {ASK_EASY_PROMPTS.map((p) => (
+          <button
+            key={p}
+            onClick={() => onPick(p)}
+            className="text-left text-sm px-3 py-2.5 rounded-xl transition-colors duration-150 hover:bg-black/[0.03]"
+            style={{ border: `1px solid ${PALETTE.line}`, color: PALETTE.ink, background: PALETTE.bg }}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const ACTION_META: Record<NonNullable<ChatAction>["type"], { href: string; icon: typeof Camera }> = {
   homework: { href: "/homework", icon: Camera },
   practice: { href: "/practice", icon: PenLine },
@@ -51,6 +85,7 @@ export function ChatScreen({
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const localIdCounter = useRef(0);
   function nextLocalId(suffix: string) {
     localIdCounter.current += 1;
@@ -113,7 +148,8 @@ export function ChatScreen({
   }
 
   return (
-    <div className="flex flex-col" style={{ minHeight: "70vh" }}>
+    <div className="flex flex-col lg:flex-row gap-6 lg:h-[calc(100vh-80px)]">
+    <div className="flex-1 min-w-0 flex flex-col lg:h-full">
       <PageHeader
         icon={<Sparkles size={20} color={PALETTE.brand} />}
         color={PALETTE.brand}
@@ -123,7 +159,7 @@ export function ChatScreen({
       />
 
       {messages.length === 0 && (
-        <div className="mb-5">
+        <div className="mb-5 flex-shrink-0">
           <p className="text-sm mb-3" style={{ color: PALETTE.inkSoft }}>
             This never reaches {childName || "your kid"}
             {" "}&mdash; it&apos;s just for you. If it&apos;s worth acting on, Easy will point you to
@@ -144,7 +180,7 @@ export function ChatScreen({
         </div>
       )}
 
-      <div className="flex-1 mb-4">
+      <div className="flex-1 mb-4 lg:overflow-y-auto lg:min-h-0 pr-0.5">
         {messages.map((m) => (
           <div key={m.id} className={`flex gap-2.5 mb-4 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             {m.role === "assistant" && <SparkleAvatar />}
@@ -205,8 +241,9 @@ export function ChatScreen({
         <div ref={bottomRef} />
       </div>
 
-      <div className="sticky bottom-0 pt-2 flex gap-2" style={{ background: PALETTE.bg }}>
+      <div className="flex-shrink-0 pt-2 flex gap-2" style={{ background: PALETTE.bg }}>
         <input
+          ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
@@ -225,6 +262,16 @@ export function ChatScreen({
           <Send size={17} color="#fff" />
         </button>
       </div>
+    </div>
+
+    <div className="lg:w-[280px] flex-shrink-0">
+      <AskSuggestionsPanel
+        onPick={(text) => {
+          setInput(text);
+          inputRef.current?.focus();
+        }}
+      />
+    </div>
     </div>
   );
 }

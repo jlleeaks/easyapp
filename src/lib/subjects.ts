@@ -19,7 +19,7 @@ export function subjectMeta(key: string) {
 }
 
 export const SUBJECT_PEDAGOGY: Record<Subject, string> = {
-  math: "Use the concrete-representational-abstract (CRA) progression — concrete household objects before pictures, pictures before symbols/numbers.",
+  math: "Use the concrete-representational-abstract (CRA) progression — concrete household objects before pictures, pictures before symbols/numbers. Keep number ranges accurate to kindergarten standards: counting/number recognition works up to 100 (by ones and tens), but addition and subtraction stays within 10 — never describe an addition/subtraction skill using a counting-scale number like 50 or 100 (e.g. never phrase it as 'adds to 50 toward a goal of 100'), and never imply the two skills share one numeric scale.",
   writing:
     "Focus on modeling and guided practice — demonstrate the letter/word formation or sentence structure first ('watch me, then you try'), emphasizing motor formation and sound-to-symbol connection over abstract rules.",
   reading:

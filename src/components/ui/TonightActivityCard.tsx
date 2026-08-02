@@ -87,8 +87,8 @@ export function TonightActivityHero({
         </PrimaryButton>
       </div>
 
-      <div className="hidden md:flex items-center justify-center px-6" style={{ minWidth: 180 }}>
-        {subjectScene(suggestion.subject, 150)}
+      <div className="hidden md:flex items-center justify-center px-7" style={{ minWidth: 210 }}>
+        {subjectScene(suggestion.subject, 180)}
       </div>
     </div>
   );

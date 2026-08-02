@@ -8,10 +8,22 @@ import { Card, PrimaryButton } from "@/components/ui/primitives";
 import { LocalDateLabel } from "@/components/ui/LocalDateLabel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { StateMarker } from "@/components/ui/StateMarker";
+import { NumericProgressBar, DevelopmentalStageBar } from "@/components/ui/MilestoneProgressBar";
 import { SUBJECTS, subjectMeta } from "@/lib/subjects";
 import { LEARNING_STATE_DESCRIPTIONS } from "@/lib/standards";
 import { roadmapSummary, derivePatternInsights, type AreaRoadmap } from "@/lib/roadmap";
 import type { Subject, LearningPattern } from "@/lib/types";
+
+/** Not-yet-comfortable observed area with the most evidence, else the first not-yet-observed area. */
+function nextStepForSubject(items: AreaRoadmap[]): AreaRoadmap | null {
+  const observed = items.filter((a) => a.evidence.length > 0);
+  const notObserved = items.filter((a) => a.evidence.length === 0);
+  return (
+    [...observed].filter((a) => a.state !== "comfortable" && a.state !== "ready_to_extend").sort((a, b) => b.evidence.length - a.evidence.length)[0] ??
+    notObserved[0] ??
+    null
+  );
+}
 
 function AreaDetail({ item, childName }: { item: AreaRoadmap; childName: string }) {
   const router = useRouter();
@@ -33,6 +45,9 @@ function AreaDetail({ item, childName }: { item: AreaRoadmap; childName: string 
           {childName} right now
         </p>
         <StateMarker state={state} />
+        <div className="mt-2 mb-1.5 max-w-[160px]">
+          <DevelopmentalStageBar state={state} />
+        </div>
         <p className="text-sm mt-1" style={{ color: PALETTE.inkSoft }}>
           {evidence[0]?.text ?? LEARNING_STATE_DESCRIPTIONS[state]}
         </p>
@@ -107,9 +122,12 @@ function ObservedRow({ item, childName }: { item: AreaRoadmap; childName: string
   return (
     <div style={{ borderBottom: `1px solid ${PALETTE.line}` }}>
       <button onClick={() => setOpen((v) => !v)} className="w-full flex items-center justify-between gap-3 py-3.5 text-left" aria-expanded={open}>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-bold mb-0.5">{item.area.area}</p>
           <StateMarker state={item.state} />
+          <div className="mt-1.5 max-w-[140px]">
+            <DevelopmentalStageBar state={item.state} />
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 text-xs font-bold" style={{ color: PALETTE.brand }}>
           {open ? "Hide" : "View details"}
@@ -127,6 +145,7 @@ function ObservedRow({ item, childName }: { item: AreaRoadmap; childName: string
 function SubjectRoadmap({ childName, areasBySubject }: { childName: string; areasBySubject: Record<Subject, AreaRoadmap[]> }) {
   const [activeSubject, setActiveSubject] = useState<Subject>("math");
   const [showAllGoals, setShowAllGoals] = useState(false);
+  const [showNextGradePreview, setShowNextGradePreview] = useState(false);
   const items = areasBySubject[activeSubject] ?? [];
   const observed = items.filter((a) => a.evidence.length > 0);
   const notObserved = items.filter((a) => a.evidence.length === 0);
@@ -134,40 +153,57 @@ function SubjectRoadmap({ childName, areasBySubject }: { childName: string; area
 
   // "Recommended next step": the not-yet-comfortable area with the most evidence (closest to a level up),
   // falling back to the first not-yet-observed area so there's always something concrete to try.
-  const nextStepArea =
-    [...observed].filter((a) => a.state !== "comfortable" && a.state !== "ready_to_extend").sort((a, b) => b.evidence.length - a.evidence.length)[0] ??
-    notObserved[0] ??
-    null;
+  const nextStepArea = nextStepForSubject(items);
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         {SUBJECTS.map((s) => {
           const active = activeSubject === s.key;
           const subjectItems = areasBySubject[s.key] ?? [];
           const summary = roadmapSummary(subjectItems);
+          const subjectNextStep = nextStepForSubject(subjectItems);
+          const nextStepLabel =
+            summary.withEvidence === 0
+              ? subjectNextStep
+                ? `Next starting point: ${subjectNextStep.area.area}`
+                : "Not enough evidence yet"
+              : subjectNextStep
+                ? `Developing: ${subjectNextStep.area.area}`
+                : "All observed areas comfortable";
           return (
             <button
               key={s.key}
               onClick={() => {
                 setActiveSubject(s.key);
                 setShowAllGoals(false);
+                setShowNextGradePreview(false);
               }}
-              className="btn-press flex items-center gap-2.5 px-4 py-3 text-left transition-all duration-150"
+              className="btn-press text-left p-5 transition-all duration-150"
               style={{
                 borderRadius: RADIUS.md,
                 background: active ? s.color : PALETTE.card,
                 border: `1.5px solid ${active ? s.color : PALETTE.line}`,
-                minWidth: 150,
               }}
             >
-              <s.icon size={18} color={active ? "#fff" : s.color} />
-              <div>
-                <p className="text-sm font-bold" style={{ color: active ? "#fff" : PALETTE.ink }}>{s.label}</p>
-                <p className="text-[11px]" style={{ color: active ? "rgba(255,255,255,0.85)" : PALETTE.inkFaint }}>
-                  {summary.withEvidence === 0 ? "Not enough evidence" : `${summary.withEvidence} observed · ${summary.comfortable} comfortable`}
+              <div className="flex items-center gap-2 mb-3">
+                <s.icon size={19} color={active ? "#fff" : s.color} />
+                <p className="font-serif-display font-bold" style={{ fontSize: 17, color: active ? "#fff" : PALETTE.ink }}>
+                  {s.label}
                 </p>
               </div>
+              <p className="text-xs font-bold mb-2" style={{ color: active ? "rgba(255,255,255,0.9)" : PALETTE.inkSoft }}>
+                {summary.withEvidence} of {subjectItems.length} areas observed
+              </p>
+              <NumericProgressBar
+                observed={summary.withEvidence}
+                total={subjectItems.length}
+                fillColor={active ? "#fff" : s.color}
+                trackColor={active ? "rgba(255,255,255,0.3)" : PALETTE.line}
+              />
+              <p className="text-xs mt-2.5 leading-snug" style={{ color: active ? "rgba(255,255,255,0.9)" : PALETTE.inkFaint }}>
+                {nextStepLabel}
+              </p>
             </button>
           );
         })}
@@ -252,6 +288,32 @@ function SubjectRoadmap({ childName, areasBySubject }: { childName: string; area
           )}
         </div>
       )}
+
+      <div className="mt-5">
+        {!showNextGradePreview ? (
+          <button
+            onClick={() => setShowNextGradePreview(true)}
+            className="text-sm font-bold underline"
+            style={{ color: PALETTE.violetDeep }}
+          >
+            What comes next in first grade →
+          </button>
+        ) : (
+          <div>
+            <SectionHeading color={PALETTE.violetDeep}>What comes next in first grade</SectionHeading>
+            <Card style={{ marginBottom: 0 }}>
+              <div className="px-5">
+                {items.map((item, i) => (
+                  <div key={item.area.id} className="py-3" style={{ borderTop: i > 0 ? `1px solid ${PALETTE.line}` : "none" }}>
+                    <p className="text-sm font-bold mb-0.5">{item.area.area}</p>
+                    <p className="text-xs" style={{ color: PALETTE.inkSoft }}>{item.area.nextGrade}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

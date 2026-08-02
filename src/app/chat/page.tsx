@@ -27,7 +27,7 @@ export default async function ChatPage() {
     .returns<ChatMessage[]>();
 
   return (
-    <Shell>
+    <Shell wide>
       <ChatScreen childId={child.id} childName={child.name} initialMessages={messages ?? []} />
     </Shell>
   );

@@ -51,7 +51,7 @@ export default async function ProgressPage() {
 
   return (
     <Shell wide>
-      <RoadmapHeader childName={child.name} />
+      <RoadmapHeader childName={child.name} roadmap={roadmap} />
 
       <ProgressTabs
         childName={child.name}

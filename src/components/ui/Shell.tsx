@@ -40,13 +40,13 @@ export function Shell({
   wide?: boolean;
 }) {
   return (
-    <div style={{ background: PALETTE.bg, minHeight: "100vh" }} className="w-full flex min-w-0">
+    <div style={{ background: PALETTE.bg }} className="w-full flex min-w-0 sm:h-screen">
       {showNav && <Sidebar />}
       <div
-        className="dot-grain flex-1 min-w-0 flex justify-center px-6 py-10 sm:px-8"
-        style={{ color: PALETTE.ink, paddingBottom: showNav ? 96 : undefined }}
+        className="dot-grain flex-1 min-w-0 flex justify-center px-6 py-10 pb-28 sm:px-8 sm:py-10 sm:pb-10 sm:h-screen sm:overflow-y-auto"
+        style={{ color: PALETTE.ink }}
       >
-        <div className="w-full min-w-0" style={{ maxWidth: wide ? 1180 : 720 }}>
+        <div className="w-full min-w-0" style={{ maxWidth: wide ? 1240 : 720 }}>
           {children}
         </div>
       </div>
@@ -68,8 +68,8 @@ function Sidebar() {
 
   return (
     <div
-      className="hidden sm:flex flex-col justify-between py-6 px-4 flex-shrink-0"
-      style={{ width: 216, borderRight: `1px solid ${PALETTE.line}`, background: PALETTE.card, minHeight: "100vh" }}
+      className="hidden sm:flex flex-col justify-between py-6 px-4 flex-shrink-0 sm:sticky sm:top-0 sm:h-screen sm:overflow-y-auto"
+      style={{ width: 216, borderRight: `1px solid ${PALETTE.line}`, background: PALETTE.card }}
     >
       <div>
         <div className="px-2 mb-8">

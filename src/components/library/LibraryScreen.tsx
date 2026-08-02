@@ -488,56 +488,17 @@ export function LibraryScreen({
         subtitle="Themes and discussion questions for books you already have"
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_336px] gap-5 items-start">
-        <div className="flex flex-col gap-5 min-w-0">
-          <Card style={{ marginBottom: 0 }}>
-            <div className="p-5 pb-3">
-              <Eyebrow>Your shelf</Eyebrow>
-            </div>
-            {books.length === 0 ? (
-              <div className="px-5 pb-5 text-sm" style={{ color: PALETTE.inkSoft }}>
-                No books yet — add one from the shelf panel and Easy will put together a reading guide for {childName}.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 px-5 pb-5">
-                {books.map((b) => (
-                  <button
-                    key={b.id}
-                    onClick={() => setViewing(b)}
-                    className="btn-press text-left rounded-2xl p-4 transition-all duration-150 hover:-translate-y-0.5"
-                    style={{ background: PALETTE.bg, border: `1px solid ${PALETTE.line}` }}
-                  >
-                    <div
-                      className="flex items-center justify-center mb-3"
-                      style={{ width: 40, height: 40, borderRadius: RADIUS.sm, background: PALETTE.brand, transform: "rotate(-6deg)" }}
-                    >
-                      <BookOpen size={17} color="#fff" />
-                    </div>
-                    <div className="text-sm font-bold mb-0.5 leading-snug">{b.title}</div>
-                    {b.author && (
-                      <div className="text-xs" style={{ color: PALETTE.inkSoft }}>
-                        {b.author}
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
-
-        <div className="flex flex-col gap-4 min-w-0">
-          <BookSuggestionsCard childId={childId} onAdded={(b) => setBooks((prev) => [b, ...prev])} />
-          <Card style={{ marginBottom: 0 }}>
-            <div className="p-5">
-              <Eyebrow color={PALETTE.brand}>Add a book from your shelf</Eyebrow>
+      <Card style={{ marginBottom: 20 }}>
+        <div className="p-5">
+          <Eyebrow color={PALETTE.brand}>Add a book from your shelf</Eyebrow>
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div className="flex-1">
               <TextField label="Title" value={title} onChange={setTitle} placeholder="e.g. Goodnight Moon" />
+            </div>
+            <div className="flex-1">
               <TextField label="Author" value={author} onChange={setAuthor} optional />
-              {error && (
-                <div className="text-sm mb-3" style={{ color: PALETTE.accent }}>
-                  {error}
-                </div>
-              )}
+            </div>
+            <div className="sm:pb-5">
               {adding ? (
                 <LoadingBlock text="Reading up on this one..." />
               ) : (
@@ -546,9 +507,51 @@ export function LibraryScreen({
                 </PrimaryButton>
               )}
             </div>
-          </Card>
+          </div>
+          {error && (
+            <div className="text-sm -mt-3" style={{ color: PALETTE.accent }}>
+              {error}
+            </div>
+          )}
         </div>
-      </div>
+      </Card>
+
+      <Card style={{ marginBottom: 20 }}>
+        <div className="p-5 pb-3">
+          <Eyebrow>Your shelf</Eyebrow>
+        </div>
+        {books.length === 0 ? (
+          <div className="px-5 pb-5 text-sm" style={{ color: PALETTE.inkSoft }}>
+            No books yet — add one above and Easy will put together a reading guide for {childName}.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 px-5 pb-5">
+            {books.map((b) => (
+              <button
+                key={b.id}
+                onClick={() => setViewing(b)}
+                className="btn-press text-left rounded-2xl p-4 transition-all duration-150 hover:-translate-y-0.5"
+                style={{ background: PALETTE.bg, border: `1px solid ${PALETTE.line}` }}
+              >
+                <div
+                  className="flex items-center justify-center mb-3"
+                  style={{ width: 40, height: 40, borderRadius: RADIUS.sm, background: PALETTE.brand, transform: "rotate(-6deg)" }}
+                >
+                  <BookOpen size={17} color="#fff" />
+                </div>
+                <div className="text-sm font-bold mb-0.5 leading-snug">{b.title}</div>
+                {b.author && (
+                  <div className="text-xs" style={{ color: PALETTE.inkSoft }}>
+                    {b.author}
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <BookSuggestionsCard childId={childId} childName={childName} onAdded={(b) => setBooks((prev) => [b, ...prev])} />
     </div>
   );
 }
