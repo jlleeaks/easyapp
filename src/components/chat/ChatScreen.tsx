@@ -75,14 +75,16 @@ export function ChatScreen({
   childId,
   childName,
   initialMessages,
+  initialDraft,
 }: {
   childId: string;
   childName: string;
   initialMessages: ChatMessage[];
+  initialDraft?: string;
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialDraft ?? "");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);

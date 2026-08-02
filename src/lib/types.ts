@@ -28,7 +28,16 @@ export type ChildProfile = {
   strengths: ProfileInsight[];
   growth_areas: ProfileInsight[];
   learning_patterns: LearningPattern[];
+  weekly_goals: WeeklyGoals | null;
   created_at: string;
+  updated_at: string;
+};
+
+/** Parent-set weekly targets, shown against real activity counts on Home — never AI-invented after the fact. */
+export type WeeklyGoals = {
+  read_together_target: number;
+  practice_target: number;
+  homework_target: number;
   updated_at: string;
 };
 
@@ -64,7 +73,7 @@ export type LearningPattern = {
 
 export type ChildProfileInput = Omit<
   ChildProfile,
-  "id" | "parent_id" | "summary" | "strengths" | "growth_areas" | "learning_patterns" | "created_at" | "updated_at"
+  "id" | "parent_id" | "summary" | "strengths" | "growth_areas" | "learning_patterns" | "weekly_goals" | "created_at" | "updated_at"
 >;
 
 export const EMPTY_CHILD_PROFILE: ChildProfileInput = {

@@ -11,19 +11,8 @@ import { StateMarker } from "@/components/ui/StateMarker";
 import { NumericProgressBar, DevelopmentalStageBar } from "@/components/ui/MilestoneProgressBar";
 import { SUBJECTS, subjectMeta } from "@/lib/subjects";
 import { LEARNING_STATE_DESCRIPTIONS } from "@/lib/standards";
-import { roadmapSummary, derivePatternInsights, type AreaRoadmap } from "@/lib/roadmap";
+import { roadmapSummary, derivePatternInsights, nextStepForSubject, type AreaRoadmap } from "@/lib/roadmap";
 import type { Subject, LearningPattern } from "@/lib/types";
-
-/** Not-yet-comfortable observed area with the most evidence, else the first not-yet-observed area. */
-function nextStepForSubject(items: AreaRoadmap[]): AreaRoadmap | null {
-  const observed = items.filter((a) => a.evidence.length > 0);
-  const notObserved = items.filter((a) => a.evidence.length === 0);
-  return (
-    [...observed].filter((a) => a.state !== "comfortable" && a.state !== "ready_to_extend").sort((a, b) => b.evidence.length - a.evidence.length)[0] ??
-    notObserved[0] ??
-    null
-  );
-}
 
 function AreaDetail({ item, childName }: { item: AreaRoadmap; childName: string }) {
   const router = useRouter();

@@ -83,6 +83,17 @@ export function roadmapSummary(areas: AreaRoadmap[]) {
   };
 }
 
+/** Not-yet-comfortable observed area with the most evidence, else the first not-yet-observed area. */
+export function nextStepForSubject(items: AreaRoadmap[]): AreaRoadmap | null {
+  const observed = items.filter((a) => a.evidence.length > 0);
+  const notObserved = items.filter((a) => a.evidence.length === 0);
+  return (
+    [...observed].filter((a) => a.state !== "comfortable" && a.state !== "ready_to_extend").sort((a, b) => b.evidence.length - a.evidence.length)[0] ??
+    notObserved[0] ??
+    null
+  );
+}
+
 /** Best-effort match of a suggest-focus recommendation onto a curated roadmap area, for display only. */
 export function areaForFocusText(subject: string, focusText: string): StandardArea | null {
   if (subject !== "math" && subject !== "writing" && subject !== "reading") return null;

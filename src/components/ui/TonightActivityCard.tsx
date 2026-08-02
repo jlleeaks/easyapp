@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Clock } from "lucide-react";
-import { PALETTE, RADIUS } from "@/lib/palette";
+import { PALETTE } from "@/lib/palette";
 import { subjectMeta } from "@/lib/subjects";
 import { PrimaryButton } from "@/components/ui/primitives";
 import { subjectScene } from "@/components/ui/SubjectScene";
@@ -91,26 +90,5 @@ export function TonightActivityHero({
         {subjectScene(suggestion.subject, 180)}
       </div>
     </div>
-  );
-}
-
-export function SecondaryActionTile({
-  href,
-  icon,
-  label,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="btn-press flex items-center gap-2 px-3.5 py-2.5 text-sm font-semibold transition-all duration-150 hover:-translate-y-0.5"
-      style={{ borderRadius: RADIUS.sm, border: `1px solid ${PALETTE.line}`, background: PALETTE.card, color: PALETTE.ink }}
-    >
-      <span style={{ color: PALETTE.inkSoft }}>{icon}</span>
-      {label}
-    </Link>
   );
 }

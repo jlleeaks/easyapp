@@ -1,18 +1,16 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Camera, Sparkles, BookOpen } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { PALETTE } from "@/lib/palette";
 import { Shell } from "@/components/ui/Shell";
 import { Wordmark } from "@/components/ui/primitives";
 import { HomeGreeting } from "@/components/ui/HomeGreeting";
-import { TonightActivityHero, SecondaryActionTile } from "@/components/ui/TonightActivityCard";
-import { NoticingStrip } from "@/components/ui/NoticingStrip";
-import { ContinueLastTime } from "@/components/ui/ContinueLastTime";
-import { ThisWeekCard } from "@/components/ui/ThisWeekCard";
+import { TonightActivityHero } from "@/components/ui/TonightActivityCard";
+import { WeeklyGoalsCard } from "@/components/ui/WeeklyGoalsCard";
+import { TopOffWithStory } from "@/components/ui/TopOffWithStory";
+import { BuildingTowardSection } from "@/components/ui/BuildingTowardSection";
+import { AskEasyMiniPrompt } from "@/components/ui/AskEasyMiniPrompt";
 import { getTonightSuggestions } from "@/lib/suggestions";
 import { areaForFocusText, computeRoadmap } from "@/lib/roadmap";
-import type { ChildProfile, Session, Skill } from "@/lib/types";
+import type { Book, ChildProfile, Session, Skill } from "@/lib/types";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -35,9 +33,10 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .maybeSingle<{ name: string | null }>();
 
-  const [{ data: allSessions }, { data: skills }] = await Promise.all([
+  const [{ data: allSessions }, { data: skills }, { data: books }] = await Promise.all([
     supabase.from("sessions").select("*").eq("child_id", child.id).order("created_at", { ascending: false }).returns<Session[]>(),
     supabase.from("skills").select("*").eq("child_id", child.id).returns<Skill[]>(),
+    supabase.from("books").select("*").eq("child_id", child.id).order("created_at", { ascending: false }).returns<Book[]>(),
   ]);
   const sessions = allSessions ?? [];
 
@@ -55,28 +54,12 @@ export default async function DashboardPage() {
     suggestion = null;
   }
 
-  const continuation = sessions.slice(0, 3).find((s) => s.micro_message?.trim()) ?? null;
-
-  const patterns = child.learning_patterns ?? [];
-  const noticing = patterns.length > 0 ? patterns[0] : null;
-
-  // "This week" summary — grounded in the same roadmap engine Progress uses, so
-  // Home never states a subject/state that Progress would contradict.
-  const weekCutoff = new Date().getTime() - 7 * 24 * 60 * 60 * 1000;
-  const activitiesThisWeek = sessions.filter((s) => new Date(s.created_at).getTime() >= weekCutoff).length;
-
   const roadmap = computeRoadmap({
     skills: skills ?? [],
     sessions,
     strengths: child.strengths ?? [],
     growthAreas: child.growth_areas ?? [],
   });
-  const withEvidence = roadmap.filter((a) => a.evidence.length > 0);
-  const notYetComfortable = withEvidence.filter((a) => a.state !== "comfortable" && a.state !== "ready_to_extend");
-  const focusItem =
-    [...notYetComfortable].sort((a, b) => b.evidence.length - a.evidence.length)[0] ??
-    [...withEvidence].sort((a, b) => b.evidence.length - a.evidence.length)[0] ??
-    null;
 
   return (
     <Shell wide>
@@ -90,29 +73,19 @@ export default async function DashboardPage() {
         <div className="md:col-span-2">
           <TonightActivityHero childName={child.name} suggestion={suggestion} area={suggestionArea} />
         </div>
-        <ThisWeekCard
-          childName={child.name}
-          activitiesThisWeek={activitiesThisWeek}
-          focusSubject={focusItem?.area.subject ?? null}
-          focusState={focusItem?.state ?? null}
-          nextFocusLabel={focusItem?.area.area ?? null}
-        />
+        <WeeklyGoalsCard childId={child.id} childName={child.name} weeklyGoals={child.weekly_goals ?? null} sessions={sessions} />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 mt-5">
-        <div className="flex flex-wrap gap-2.5">
-          <SecondaryActionTile href="/homework" icon={<Camera size={16} />} label="Upload homework" />
-          <SecondaryActionTile href="/practice" icon={<Sparkles size={16} />} label="Choose another activity" />
-          <SecondaryActionTile href="/library" icon={<BookOpen size={16} />} label="Read together" />
-        </div>
-        <Link href="/chat" className="text-xs font-bold underline whitespace-nowrap" style={{ color: PALETTE.brand }}>
-          Not sure what {child.name} needs? Ask Easy
-        </Link>
+      <div className="mt-4">
+        <TopOffWithStory childName={child.name} books={books ?? []} librarySessions={sessions.filter((s) => s.source === "library")} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
-        <NoticingStrip pattern={noticing} />
-        <ContinueLastTime session={continuation} />
+      <div className="mt-6">
+        <BuildingTowardSection childName={child.name} roadmap={roadmap} />
+      </div>
+
+      <div className="mt-6">
+        <AskEasyMiniPrompt childName={child.name} />
       </div>
     </Shell>
   );

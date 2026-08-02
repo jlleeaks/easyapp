@@ -4,7 +4,8 @@ import { Shell } from "@/components/ui/Shell";
 import { ChatScreen } from "@/components/chat/ChatScreen";
 import type { ChatMessage, ChildProfile } from "@/lib/types";
 
-export default async function ChatPage() {
+export default async function ChatPage({ searchParams }: { searchParams: Promise<{ draft?: string }> }) {
+  const { draft } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -28,7 +29,7 @@ export default async function ChatPage() {
 
   return (
     <Shell wide>
-      <ChatScreen childId={child.id} childName={child.name} initialMessages={messages ?? []} />
+      <ChatScreen childId={child.id} childName={child.name} initialMessages={messages ?? []} initialDraft={draft} />
     </Shell>
   );
 }

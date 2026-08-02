@@ -260,3 +260,8 @@ alter table public.sessions add constraint sessions_source_check
 -- ("what you noticed last time") can be reliably shown when a book is reopened.
 alter table public.sessions add column if not exists book_id uuid references public.books (id) on delete set null;
 create index if not exists sessions_book_id_idx on public.sessions (book_id);
+
+-- Parent-set weekly targets for Home's "This week" section: { read_together_target,
+-- practice_target, homework_target, updated_at }. Null until the parent sets them (or
+-- accepts an AI suggestion) — Home must never fabricate a target the parent didn't choose.
+alter table public.children add column if not exists weekly_goals jsonb;

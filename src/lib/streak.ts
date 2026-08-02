@@ -26,6 +26,27 @@ export function last7DaysActivity(sessionDates: string[]) {
   return result;
 }
 
+function mondayOfThisWeek(): Date {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + mondayOffset);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+
+/** Per-source counts since this calendar week's Monday, in the browser's local time — same week boundary as thisWeekActivity/WeekTracker. */
+export function thisWeekCounts(sessions: { source: string; created_at: string }[]): Record<string, number> {
+  const monday = mondayOfThisWeek();
+  const counts: Record<string, number> = {};
+  for (const s of sessions) {
+    if (new Date(s.created_at) < monday) continue;
+    counts[s.source] = (counts[s.source] ?? 0) + 1;
+  }
+  return counts;
+}
+
 const WEEKDAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
 export function thisWeekActivity(sessionDates: string[]) {
