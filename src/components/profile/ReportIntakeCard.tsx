@@ -43,7 +43,7 @@ export function ReportIntakeCard({
   const [mediaType, setMediaType] = useState("image/jpeg");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ strengths: string[]; growthAreas: string[] } | null>(null);
+  const [result, setResult] = useState<{ topic?: string; strengths: string[]; growthAreas: string[] } | null>(null);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -69,7 +69,7 @@ export function ReportIntakeCard({
         setError(data.error || "Couldn't process that — try again.");
         return;
       }
-      setResult({ strengths: data.strengths ?? [], growthAreas: data.growthAreas ?? [] });
+      setResult({ topic: data.topic, strengths: data.strengths ?? [], growthAreas: data.growthAreas ?? [] });
       setNotes("");
       setImagePreview(null);
       setImageBase64(null);
@@ -98,7 +98,7 @@ export function ReportIntakeCard({
             <div className="flex items-center gap-1.5 mb-2">
               <Check size={14} color={PALETTE.brand} />
               <p className="text-sm font-bold" style={{ color: PALETTE.brand }}>
-                Added to {childName}&apos;s profile
+                {result.topic ? `Logged: ${result.topic}` : `Added to ${childName}'s profile`}
               </p>
             </div>
             {result.strengths.length > 0 && (

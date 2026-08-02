@@ -118,6 +118,9 @@ export type Briefing = {
   real_life_connection: string;
   estimated_minutes: string;
   math_anxiety_note: string;
+  /** Only present for a logged graded assignment (never a coaching briefing) — see AssignmentRecapView. */
+  went_well?: string[];
+  to_improve?: string[];
 };
 
 export type CheckinAnswers = {

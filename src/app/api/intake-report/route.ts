@@ -1,13 +1,22 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { REPORT_INTAKE_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
+import { REPORT_INTAKE_SYSTEM, ASSIGNMENT_INTAKE_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
 import type { Briefing, ChildProfile, ProfileInsight, Subject } from "@/lib/types";
 import type Anthropic from "@anthropic-ai/sdk";
 
 type TaggedInsight = { text: string; subject?: string };
 
-type IntakeResult = {
+type ProfileIntakeResult = {
   updated_summary: string;
+  strengths: TaggedInsight[];
+  growth_areas: TaggedInsight[];
+};
+
+type AssignmentIntakeResult = {
+  topic: string;
+  recap: string;
+  went_well: string[];
+  to_improve: string[];
   strengths: TaggedInsight[];
   growth_areas: TaggedInsight[];
 };
@@ -40,6 +49,7 @@ export async function POST(request: Request) {
   const safeSubject: Subject | "general" = VALID_SUBJECTS.includes(subject as Subject) ? (subject as Subject) : "general";
   const source: ProfileInsight["source"] =
     intakeType === "assignment" ? "assignment" : intakeType === "teacher" ? "teacher" : "report_card";
+  const isAssignment = intakeType === "assignment" && safeSubject !== "general";
 
   const { data: child, error: childError } = await supabase
     .from("children")
@@ -71,17 +81,93 @@ export async function POST(request: Request) {
       });
     }
 
-    const parsed = await callClaudeJSON<IntakeResult>({ system: REPORT_INTAKE_SYSTEM, userContent, maxTokens: 900 });
-    if (!parsed) {
-      return NextResponse.json({ error: "Couldn't make sense of that — try again." }, { status: 502 });
-    }
-
     // When the intake entry point already pins a subject (e.g. a Homework subject page),
     // trust that context. Otherwise (the general Profile intake) use the model's own
     // per-item subject tag so insights stay findable by the roadmap for the right subject.
     function resolveSubject(itemSubject?: string): Subject | "general" {
       if (safeSubject !== "general") return safeSubject;
       return VALID_SUBJECTS.includes(itemSubject as Subject) ? (itemSubject as Subject) : "general";
+    }
+
+    if (isAssignment) {
+      const parsed = await callClaudeJSON<AssignmentIntakeResult>({ system: ASSIGNMENT_INTAKE_SYSTEM, userContent, maxTokens: 900 });
+      if (!parsed) {
+        return NextResponse.json({ error: "Couldn't make sense of that — try again." }, { status: 502 });
+      }
+
+      const now = new Date().toISOString();
+      const newStrengths: ProfileInsight[] = (parsed.strengths ?? []).map((item) => ({
+        id: crypto.randomUUID(),
+        subject: resolveSubject(item.subject),
+        text: item.text,
+        source,
+        created_at: now,
+      }));
+      const newGrowthAreas: ProfileInsight[] = (parsed.growth_areas ?? []).map((item) => ({
+        id: crypto.randomUUID(),
+        subject: resolveSubject(item.subject),
+        text: item.text,
+        source,
+        created_at: now,
+      }));
+
+      const mergedStrengths = [...newStrengths, ...(child.strengths ?? [])].slice(0, MAX_INSIGHTS);
+      const mergedGrowthAreas = [...newGrowthAreas, ...(child.growth_areas ?? [])].slice(0, MAX_INSIGHTS);
+
+      // Deliberately NOT touching child.summary here — that's the cumulative, whole-child
+      // picture, and folding every single quiz into it is exactly what made "why it matters"
+      // balloon into an unrelated wall of text. A single assignment's context belongs on its
+      // own session (topic/recap/went_well/to_improve below), not smeared across the profile.
+      const { error: updateError } = await supabase
+        .from("children")
+        .update({ strengths: mergedStrengths, growth_areas: mergedGrowthAreas })
+        .eq("id", childId);
+      if (updateError) throw updateError;
+
+      const topic = parsed.topic?.trim() || "Graded assignment";
+      const briefing: Briefing = {
+        skill: topic,
+        why_it_matters: parsed.recap ?? "",
+        is_new_concept: false,
+        analogies: [],
+        household_objects: [],
+        followup_questions: [],
+        stuck_tip: "",
+        alternate_approach: "",
+        watch_for: "",
+        praise_phrase: "",
+        autonomy_tip: "",
+        real_life_connection: "",
+        estimated_minutes: "",
+        math_anxiety_note: "",
+        went_well: parsed.went_well ?? [],
+        to_improve: parsed.to_improve ?? [],
+      };
+      const { error: sessionError } = await supabase.from("sessions").insert({
+        child_id: childId,
+        subject: safeSubject,
+        source: "homework",
+        skill: topic,
+        briefing,
+        checkin: null,
+        micro_message: parsed.recap ?? null,
+        parent_notes: notes?.trim() || null,
+      });
+      if (sessionError) console.error("[intake-report] session insert failed", sessionError);
+
+      return NextResponse.json({
+        topic,
+        recap: parsed.recap,
+        wentWell: parsed.went_well ?? [],
+        toImprove: parsed.to_improve ?? [],
+        strengths: newStrengths.map((s) => s.text),
+        growthAreas: newGrowthAreas.map((g) => g.text),
+      });
+    }
+
+    const parsed = await callClaudeJSON<ProfileIntakeResult>({ system: REPORT_INTAKE_SYSTEM, userContent, maxTokens: 900 });
+    if (!parsed) {
+      return NextResponse.json({ error: "Couldn't make sense of that — try again." }, { status: 502 });
     }
 
     const now = new Date().toISOString();
@@ -112,41 +198,6 @@ export async function POST(request: Request) {
       })
       .eq("id", childId);
     if (updateError) throw updateError;
-
-    // A graded assignment is subject-scoped (unlike the general Profile intake) and the
-    // Homework subject page's "Past assignments" list reads only from `sessions` — without
-    // this, an assignment intake would show up in Progress (strengths/growth_areas) but
-    // never in that subject's own history, which is exactly the mismatch this fixes.
-    if (intakeType === "assignment" && safeSubject !== "general") {
-      const highlights = [...newStrengths, ...newGrowthAreas].map((i) => i.text);
-      const briefing: Briefing = {
-        skill: highlights[0] ?? "Graded assignment",
-        why_it_matters: parsed.updated_summary,
-        is_new_concept: false,
-        analogies: [],
-        household_objects: [],
-        followup_questions: [],
-        stuck_tip: "",
-        alternate_approach: "",
-        watch_for: "",
-        praise_phrase: "",
-        autonomy_tip: "",
-        real_life_connection: "",
-        estimated_minutes: "",
-        math_anxiety_note: "",
-      };
-      const { error: sessionError } = await supabase.from("sessions").insert({
-        child_id: childId,
-        subject: safeSubject,
-        source: "homework",
-        skill: highlights[0] ?? "Graded assignment",
-        briefing,
-        checkin: null,
-        micro_message: highlights.length > 0 ? highlights.join(" · ") : "Added to the profile.",
-        parent_notes: notes?.trim() || null,
-      });
-      if (sessionError) console.error("[intake-report] session insert failed", sessionError);
-    }
 
     return NextResponse.json({
       updatedSummary: parsed.updated_summary,

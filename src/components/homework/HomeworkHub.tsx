@@ -20,6 +20,7 @@ import {
 import { AskEasyCard } from "@/components/ui/AskEasyCard";
 import { ReportIntakeCard } from "@/components/profile/ReportIntakeCard";
 import { BriefingView } from "@/components/homework/BriefingView";
+import { AssignmentRecapView } from "@/components/homework/AssignmentRecapView";
 import { CompactBriefingView } from "@/components/homework/CompactBriefingView";
 import { BriefingSkeleton } from "@/components/homework/BriefingSkeleton";
 import type { Briefing, CheckinAnswers, Session, Subject } from "@/lib/types";
@@ -35,6 +36,10 @@ type Step =
   | "submitting"
   | "iteration"
   | "session-detail";
+
+function formatShortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -263,7 +268,7 @@ export function HomeworkHub({
                         iconColor={m.color}
                         iconSoft={m.soft}
                         title={s.skill}
-                        subtitle={`${m.label}${s.micro_message ? ` · ${s.micro_message}` : ""}`}
+                        subtitle={`${formatShortDate(s.created_at)} · ${m.label}${s.micro_message ? ` · ${s.micro_message}` : ""}`}
                         trailing={<ChevronRight size={16} color={PALETTE.inkFaint} />}
                       />
                     );
@@ -351,7 +356,7 @@ export function HomeworkHub({
                       iconColor={meta.color}
                       iconSoft={meta.soft}
                       title={s.skill}
-                      subtitle={s.micro_message ?? undefined}
+                      subtitle={s.micro_message ? `${formatShortDate(s.created_at)} · ${s.micro_message}` : formatShortDate(s.created_at)}
                       trailing={<ChevronRight size={16} color={PALETTE.inkFaint} />}
                     />
                   ))}
@@ -396,6 +401,10 @@ export function HomeworkHub({
 
   if (step === "session-detail" && viewingSession) {
     const cin = viewingSession.checkin && "overall" in viewingSession.checkin ? viewingSession.checkin : null;
+    // A logged graded assignment never goes through the check-in flow (no coaching
+    // briefing was delivered), so it never has a checkin — that's how we tell it apart
+    // from a real coached homework/practice session and route it to the recap view.
+    const isLoggedAssignment = !viewingSession.checkin;
     return (
       <div className="animate-fade-in-up max-w-[760px] mx-auto">
         <button
@@ -433,7 +442,11 @@ export function HomeworkHub({
           </Card>
         )}
 
-        <BriefingView briefing={viewingSession.briefing} />
+        {isLoggedAssignment ? (
+          <AssignmentRecapView briefing={viewingSession.briefing} childName={childName} />
+        ) : (
+          <BriefingView briefing={viewingSession.briefing} />
+        )}
 
         <Card tint={PALETTE.goldSoft}>
           <div className="p-5">
