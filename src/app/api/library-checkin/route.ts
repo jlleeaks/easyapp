@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { ITERATION_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
 import type { Briefing, ChildProfile, LibraryCheckinAnswers } from "@/lib/types";
 import type { SkillStage } from "@/lib/palette";
-import { SKILL_STAGES } from "@/lib/palette";
 
 type IterationResult = {
   micro_message: string;
@@ -57,7 +56,7 @@ export async function POST(request: Request) {
       maxTokens: 900,
     });
 
-    if (!parsed || !SKILL_STAGES.includes(parsed.skill_status)) {
+    if (!parsed) {
       return NextResponse.json({ error: "Couldn't process that check-in — try again." }, { status: 502 });
     }
 
@@ -101,7 +100,8 @@ export async function POST(request: Request) {
     if (summaryError) throw summaryError;
 
     return NextResponse.json({ microMessage: parsed.micro_message, sessionId: inserted?.id });
-  } catch {
+  } catch (err) {
+    console.error("[library-checkin] failed", err);
     return NextResponse.json(
       { error: "Couldn't process that check-in — check your connection and try again." },
       { status: 502 },

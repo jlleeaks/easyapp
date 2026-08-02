@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ITERATION_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
 import type { Briefing, CheckinAnswers, ChildProfile, Subject } from "@/lib/types";
 import type { SkillStage } from "@/lib/palette";
-import { SKILL_STAGES } from "@/lib/palette";
+import { normalizeSkillStage } from "@/lib/palette";
 
 const VALID_SUBJECTS: Subject[] = ["math", "writing", "reading"];
 
@@ -59,12 +59,13 @@ export async function POST(request: Request) {
       maxTokens: 900,
     });
 
-    if (!parsed || !SKILL_STAGES.includes(parsed.skill_status)) {
+    if (!parsed) {
       return NextResponse.json(
         { error: "Couldn't process that check-in — try again." },
         { status: 502 },
       );
     }
+    const skillStatus = normalizeSkillStage(parsed.skill_status);
 
     const { data: inserted, error: sessionError } = await supabase
       .from("sessions")
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
         child_id: childId,
         subject: safeSubject,
         skill_name: briefing.skill,
-        stage: parsed.skill_status,
+        stage: skillStatus,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "child_id,subject,skill_name" },

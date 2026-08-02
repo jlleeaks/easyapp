@@ -46,6 +46,19 @@ export const SKILL_STAGES = [
 
 export type SkillStage = (typeof SKILL_STAGES)[number];
 
+// The model is asked to return one of SKILL_STAGES verbatim, but sometimes adds
+// punctuation, capitalization, or a close paraphrase. Coerce leniently instead
+// of failing the whole check-in over a cosmetic mismatch.
+export function normalizeSkillStage(raw: unknown, fallback: SkillStage = "just starting"): SkillStage {
+  const s = String(raw ?? "").toLowerCase().trim().replace(/[.!?]+$/, "");
+  if ((SKILL_STAGES as readonly string[]).includes(s)) return s as SkillStage;
+  if (s.includes("comfortable") || s.includes("confident") || s.includes("mastered")) return "comfortable";
+  if (s.includes("getting there") || s.includes("almost") || s.includes("progress")) return "getting there";
+  if (s.includes("just start") || s.includes("beginning") || s.includes("new to")) return "just starting";
+  if (s.includes("not yet") || s.includes("hasn't") || s.includes("has not") || s.includes("introduc")) return "not yet introduced";
+  return fallback;
+}
+
 export const STAGE_COLORS: Record<SkillStage, string> = {
   "not yet introduced": PALETTE.line,
   "just starting": PALETTE.accent,
