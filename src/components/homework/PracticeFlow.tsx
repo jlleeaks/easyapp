@@ -32,13 +32,18 @@ export function PracticeFlow({
   childId,
   childName,
   initialSubject,
+  initialTopic,
+  initialReason,
 }: {
   childId: string;
   childName: string;
   initialSubject?: string;
+  initialTopic?: string;
+  initialReason?: string;
 }) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("loading-suggestions");
+  const autoGenerate = Boolean(initialTopic?.trim());
+  const [step, setStep] = useState<Step>(autoGenerate ? "generating" : "loading-suggestions");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
   const [customSubject, setCustomSubject] = useState<Subject>(
@@ -57,6 +62,10 @@ export function PracticeFlow({
   const [microMessage, setMicroMessage] = useState("");
 
   useEffect(() => {
+    if (autoGenerate) {
+      generate(customSubject, initialTopic!.trim(), initialReason);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {

@@ -50,12 +50,18 @@ create table if not exists public.children (
   strengths jsonb not null default '[]',
   growth_areas jsonb not null default '[]',
 
+  -- observable learning-confidence patterns (engagement/frustration/what helped),
+  -- kept separate from the academic strengths/growth_areas model: [{ id, subject,
+  -- observation, trigger, parent_response, helped, source, created_at, confirmed }]
+  learning_patterns jsonb not null default '[]',
+
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 alter table public.children add column if not exists strengths jsonb not null default '[]';
 alter table public.children add column if not exists growth_areas jsonb not null default '[]';
+alter table public.children add column if not exists learning_patterns jsonb not null default '[]';
 
 -- One row per completed homework/practice session.
 create table if not exists public.sessions (

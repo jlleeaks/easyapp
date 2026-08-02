@@ -4,6 +4,7 @@ import { ITERATION_SYSTEM, callClaudeJSON, childProfileForPrompt } from "@/lib/a
 import type { Briefing, CheckinAnswers, ChildProfile, Subject } from "@/lib/types";
 import type { SkillStage } from "@/lib/palette";
 import { normalizeSkillStage } from "@/lib/palette";
+import { deriveHomeworkLearningPatterns } from "@/lib/patterns";
 
 const VALID_SUBJECTS: Subject[] = ["math", "writing", "reading"];
 
@@ -99,6 +100,17 @@ export async function POST(request: Request) {
       .update({ summary: parsed.updated_summary })
       .eq("id", childId);
     if (summaryError) throw summaryError;
+
+    // Best-effort: never let this block the check-in itself from succeeding.
+    const newPatterns = deriveHomeworkLearningPatterns(safeSubject, briefing.skill, checkin);
+    if (newPatterns.length > 0) {
+      const mergedPatterns = [...newPatterns, ...(child.learning_patterns ?? [])].slice(0, 50);
+      const { error: patternError } = await supabase
+        .from("children")
+        .update({ learning_patterns: mergedPatterns })
+        .eq("id", childId);
+      if (patternError) console.error("[checkin] learning_patterns update failed", patternError);
+    }
 
     return NextResponse.json({ microMessage: parsed.micro_message, sessionId: inserted?.id });
   } catch {

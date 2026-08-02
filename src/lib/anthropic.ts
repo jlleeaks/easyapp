@@ -276,10 +276,15 @@ Respond with ONLY strict JSON, no markdown fences, no preamble:
 }`;
 
 export function childProfileForPrompt(child: ChildProfile) {
-  const { id, parent_id, created_at, updated_at, ...rest } = child;
+  const { id, parent_id, created_at, updated_at, learning_patterns, ...rest } = child;
   void id;
   void parent_id;
   void created_at;
   void updated_at;
-  return rest;
+  return {
+    ...rest,
+    // A parent can mark an observation as "don't use this for future activities" —
+    // respect that by excluding it from what the model sees, not just from display.
+    learning_patterns: (learning_patterns ?? []).filter((p) => p.used_for_personalization !== false),
+  };
 }

@@ -29,7 +29,7 @@ export function ReportIntakeCard({
   childId: string;
   childName: string;
   subject?: Subject;
-  intakeType?: "report_card" | "assignment";
+  intakeType?: "report_card" | "assignment" | "teacher";
   title?: string;
   description?: string;
   placeholder?: string;

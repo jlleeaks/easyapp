@@ -1,19 +1,13 @@
 import { redirect } from "next/navigation";
-import { Camera, TrendingUp, ChevronRight, Check, Sparkles, BookOpen } from "lucide-react";
+import Link from "next/link";
+import { Camera, Sparkles, BookOpen, Lightbulb, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PALETTE } from "@/lib/palette";
 import { Shell } from "@/components/ui/Shell";
-import { Card, Row, RowList, Wordmark } from "@/components/ui/primitives";
-import { ActionCard } from "@/components/ui/ActionCard";
-import { AskEasyCard } from "@/components/ui/AskEasyCard";
-import { AchievementBadge } from "@/components/ui/AchievementBadge";
-import { WeekTracker } from "@/components/ui/WeekTracker";
-import { TonightSuggestionCard } from "@/components/ui/TonightSuggestionCard";
-import { StrengthsOverviewCard } from "@/components/ui/StrengthsOverviewCard";
-import { Hero } from "@/components/ui/Hero";
-import { TonightNudgeBanner } from "@/components/ui/TonightNudgeBanner";
-import { LocalDateLabel } from "@/components/ui/LocalDateLabel";
-import type { ChildProfile, Session, Skill } from "@/lib/types";
+import { Wordmark, Eyebrow, Card } from "@/components/ui/primitives";
+import { HomeGreeting } from "@/components/ui/HomeGreeting";
+import { TonightActivityCard, SecondaryActionLink } from "@/components/ui/TonightActivityCard";
+import type { ChildProfile, Session } from "@/lib/types";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -30,137 +24,101 @@ export default async function DashboardPage() {
     .maybeSingle<ChildProfile>();
   if (!child) redirect("/onboarding");
 
-  const { data: sessions } = await supabase
-    .from("sessions")
-    .select("*")
-    .eq("child_id", child.id)
-    .order("created_at", { ascending: false })
-    .limit(5)
-    .returns<Session[]>();
-
   const { data: parent } = await supabase
     .from("parents")
     .select("name")
     .eq("id", user.id)
     .maybeSingle<{ name: string | null }>();
 
-  const { data: skills } = await supabase
-    .from("skills")
+  const { data: recentSessions } = await supabase
+    .from("sessions")
     .select("*")
     .eq("child_id", child.id)
-    .order("updated_at", { ascending: false })
-    .limit(6)
-    .returns<Skill[]>();
-  const featuredSkill = skills?.[0] ?? null;
+    .order("created_at", { ascending: false })
+    .limit(3)
+    .returns<Session[]>();
 
-  const { count: sessionCount } = await supabase
-    .from("sessions")
-    .select("id", { count: "exact", head: true })
-    .eq("child_id", child.id);
+  const continuation = (recentSessions ?? []).find((s) => s.micro_message?.trim());
+  const continuationHref = continuation
+    ? continuation.source === "library"
+      ? continuation.book_id
+        ? `/library?book=${continuation.book_id}`
+        : "/library"
+      : `/homework?subject=${continuation.subject}&session=${continuation.id}`
+    : null;
+  const continuationLabel = continuation?.source === "library" ? "Open story guide" : "Open session";
 
-  const sessionDates = (sessions ?? []).map((s) => s.created_at);
+  const patterns = child.learning_patterns ?? [];
+  const noticing = patterns.length > 0 ? patterns[0] : null;
 
   return (
     <Shell wide>
       <div className="flex items-center justify-between mb-6 sm:hidden">
         <Wordmark small />
       </div>
-      <Hero childName={child.name} parentName={parent?.name} sessionDates={sessionDates} sessionCount={sessionCount ?? 0} />
 
-      <TonightNudgeBanner childName={child.name} sessionDates={sessionDates} />
+      <HomeGreeting parentName={parent?.name} childName={child.name} />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_336px] gap-5 items-start">
         <div className="flex flex-col gap-5 min-w-0">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <ActionCard
-              key="homework"
-              href="/homework"
-              icon={<Camera size={19} color="#fff" />}
-              color={PALETTE.accent}
-              soft={PALETTE.accentSoft}
-              title="Have homework?"
-              subtitle="Take a picture, get tonight’s plan"
-              cta="Photograph it"
-            />
-            <ActionCard
-              key="practice"
-              href="/practice"
-              icon={<Sparkles size={19} color="#fff" />}
-              color={PALETTE.gold}
-              soft={PALETTE.goldSoft}
-              title="No homework tonight?"
-              subtitle={`Get a lesson built around ${child.name}'s strengths`}
-              cta="Build a lesson"
-            />
-            <ActionCard
-              key="library"
-              href="/library"
-              icon={<BookOpen size={19} color="#fff" />}
-              color={PALETTE.brand}
-              soft={PALETTE.brandSoft}
-              title="Want a bedtime story?"
-              subtitle="Turn tonight’s book into a real chat"
-              cta="Pick a book"
-            />
+          <TonightActivityCard childId={child.id} childName={child.name} />
+
+          <div>
+            <p className="text-xs font-bold uppercase mb-2.5 px-1" style={{ color: PALETTE.inkFaint, letterSpacing: "0.06em" }}>
+              Something else tonight?
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <SecondaryActionLink href="/homework" icon={<Camera size={15} />} label="Upload homework" />
+              <SecondaryActionLink href="/practice" icon={<Sparkles size={15} />} label="Choose another activity" />
+              <SecondaryActionLink href="/library" icon={<BookOpen size={15} />} label="Read together" />
+            </div>
           </div>
 
-          <StrengthsOverviewCard childName={child.name} strengths={child.strengths ?? []} growthAreas={child.growth_areas ?? []} />
-
-          <TonightSuggestionCard childId={child.id} />
-
-          {sessions && sessions.length > 0 && (
+          {noticing && (
             <Card style={{ marginBottom: 0 }}>
-              <div className="flex items-center gap-3 p-5 pb-3">
-                <div
-                  style={{ width: 36, height: 36, borderRadius: 11, background: PALETTE.brandSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
-                >
-                  <TrendingUp size={16} color={PALETTE.brand} />
+              <div className="p-5">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Lightbulb size={13} color={PALETTE.brand} />
+                  <Eyebrow color={PALETTE.brand}>One thing to notice</Eyebrow>
                 </div>
-                <p className="text-[15px] font-semibold">Recent sessions</p>
+                <p className="text-sm" style={{ color: PALETTE.inkSoft }}>
+                  {noticing.observation}
+                  {noticing.parent_response ? ` — ${noticing.parent_response} appeared to help.` : "."}
+                </p>
               </div>
-              <RowList>
-                {sessions.map((s) => (
-                  <Row
-                    key={s.id}
-                    href={s.source === "library" ? (s.book_id ? `/library?book=${s.book_id}` : "/library") : `/homework?subject=${s.subject}&session=${s.id}`}
-                    icon={s.source === "library" ? <BookOpen size={16} /> : <Check size={16} />}
-                    iconColor={PALETTE.brand}
-                    iconSoft={PALETTE.brandSoft}
-                    title={s.skill}
-                    subtitle={s.micro_message ?? undefined}
-                    trailing={
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <span className="text-xs font-semibold" style={{ color: PALETTE.inkSoft }}>
-                          <LocalDateLabel iso={s.created_at} />
-                        </span>
-                        <ChevronRight size={16} color={PALETTE.inkFaint} />
-                      </div>
-                    }
-                  />
-                ))}
-              </RowList>
+            </Card>
+          )}
+
+          {continuation && continuationHref && (
+            <Card style={{ marginBottom: 0 }}>
+              <div className="p-5">
+                <Eyebrow color={PALETTE.gold}>Continue from last time</Eyebrow>
+                <p className="text-sm mt-1 mb-3" style={{ color: PALETTE.inkSoft }}>
+                  {continuation.micro_message}
+                </p>
+                <Link
+                  href={continuationHref}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold"
+                  style={{ color: PALETTE.brand }}
+                >
+                  {continuationLabel} <ArrowRight size={13} />
+                </Link>
+              </div>
             </Card>
           )}
         </div>
 
         <div className="flex flex-col gap-4 min-w-0">
-          <AskEasyCard />
-
-          <WeekTracker sessionDates={sessionDates} />
-
-          {featuredSkill && (
-            <AchievementBadge
-              skillName={featuredSkill.skill_name}
-              stage={featuredSkill.stage}
-              note={
-                sessions?.[0]?.micro_message
-                  ? sessions[0].micro_message.length > 60
-                    ? sessions[0].micro_message.slice(0, 57) + "…"
-                    : sessions[0].micro_message
-                  : "Keep showing up and this will start filling in."
-              }
-            />
-          )}
+          <Card style={{ marginBottom: 0 }}>
+            <div className="p-4 text-center">
+              <p className="text-xs" style={{ color: PALETTE.inkSoft }}>
+                Not sure what {child.name} needs?{" "}
+                <Link href="/chat" className="font-bold underline" style={{ color: PALETTE.brand }}>
+                  Ask Easy
+                </Link>
+              </p>
+            </div>
+          </Card>
         </div>
       </div>
     </Shell>

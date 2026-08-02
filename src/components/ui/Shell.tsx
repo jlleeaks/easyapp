@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home as HomeIcon, Camera, BookOpen, TrendingUp, User, LogOut, Sparkles } from "lucide-react";
+import { Home as HomeIcon, Camera, BookOpen, TrendingUp, User, LogOut, Sparkles, Settings } from "lucide-react";
 import { PALETTE } from "@/lib/palette";
 import { Wordmark } from "@/components/ui/primitives";
 import { createClient } from "@/lib/supabase/client";
@@ -98,14 +98,24 @@ function Sidebar() {
           })}
         </div>
       </div>
-      <button
-        onClick={signOut}
-        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors duration-150 hover:bg-black/[0.03]"
-        style={{ color: PALETTE.inkSoft }}
-      >
-        <LogOut size={16} />
-        <span className="text-sm font-medium">Sign out</span>
-      </button>
+      <div className="flex flex-col gap-1">
+        <Link
+          href="/settings"
+          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors duration-150 hover:bg-black/[0.03]"
+          style={{ color: pathname?.startsWith("/settings") ? PALETTE.accent : PALETTE.inkSoft }}
+        >
+          <Settings size={16} />
+          <span className="text-sm font-medium">Settings</span>
+        </Link>
+        <button
+          onClick={signOut}
+          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors duration-150 hover:bg-black/[0.03]"
+          style={{ color: PALETTE.inkSoft }}
+        >
+          <LogOut size={16} />
+          <span className="text-sm font-medium">Sign out</span>
+        </button>
+      </div>
     </div>
   );
 }

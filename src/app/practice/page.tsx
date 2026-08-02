@@ -7,7 +7,7 @@ import type { ChildProfile } from "@/lib/types";
 export default async function PracticePage({
   searchParams,
 }: {
-  searchParams: Promise<{ subject?: string }>;
+  searchParams: Promise<{ subject?: string; topic?: string; reason?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -23,11 +23,11 @@ export default async function PracticePage({
     .maybeSingle<ChildProfile>();
   if (!child) redirect("/onboarding");
 
-  const { subject } = await searchParams;
+  const { subject, topic, reason } = await searchParams;
 
   return (
     <Shell>
-      <PracticeFlow childId={child.id} childName={child.name} initialSubject={subject} />
+      <PracticeFlow childId={child.id} childName={child.name} initialSubject={subject} initialTopic={topic} initialReason={reason} />
     </Shell>
   );
 }

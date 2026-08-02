@@ -27,20 +27,44 @@ export type ChildProfile = {
   summary: string;
   strengths: ProfileInsight[];
   growth_areas: ProfileInsight[];
+  learning_patterns: LearningPattern[];
   created_at: string;
   updated_at: string;
 };
 
+export type InsightSource = "report_card" | "assignment" | "session" | "teacher" | "parent";
+
 export type ProfileInsight = {
+  id?: string;
   subject: Subject | "general";
   text: string;
-  source: "report_card" | "assignment" | "session";
+  source: InsightSource;
   created_at: string;
+  confirmed?: "confirmed" | "corrected" | null;
+};
+
+/**
+ * Observable learning-confidence pattern — engagement/frustration behavior tied to a
+ * subject/context, never a clinical or personality label. Kept separate from the
+ * academic strengths/growth_areas model per the app's core "no diagnosis" principle.
+ */
+export type LearningPattern = {
+  id: string;
+  subject: Subject | "general";
+  observation: string;
+  trigger?: string | null;
+  parent_response?: string | null;
+  helped?: boolean | null;
+  source: InsightSource;
+  created_at: string;
+  confirmed?: "confirmed" | "corrected" | null;
+  /** Defaults to true when absent — set false to exclude from AI personalization prompts. */
+  used_for_personalization?: boolean;
 };
 
 export type ChildProfileInput = Omit<
   ChildProfile,
-  "id" | "parent_id" | "summary" | "strengths" | "growth_areas" | "created_at" | "updated_at"
+  "id" | "parent_id" | "summary" | "strengths" | "growth_areas" | "learning_patterns" | "created_at" | "updated_at"
 >;
 
 export const EMPTY_CHILD_PROFILE: ChildProfileInput = {

@@ -29,14 +29,15 @@ export async function POST(request: Request) {
     imageBase64?: string;
     mediaType?: string;
     subject?: string;
-    intakeType?: "report_card" | "assignment";
+    intakeType?: "report_card" | "assignment" | "teacher";
   };
 
   if (!childId || (!notes?.trim() && !imageBase64)) {
     return NextResponse.json({ error: "Add a note or a photo first." }, { status: 400 });
   }
   const safeSubject: Subject | "general" = VALID_SUBJECTS.includes(subject as Subject) ? (subject as Subject) : "general";
-  const source: ProfileInsight["source"] = intakeType === "assignment" ? "assignment" : "report_card";
+  const source: ProfileInsight["source"] =
+    intakeType === "assignment" ? "assignment" : intakeType === "teacher" ? "teacher" : "report_card";
 
   const { data: child, error: childError } = await supabase
     .from("children")
@@ -75,12 +76,14 @@ export async function POST(request: Request) {
 
     const now = new Date().toISOString();
     const newStrengths: ProfileInsight[] = (parsed.strengths ?? []).map((text) => ({
+      id: crypto.randomUUID(),
       subject: safeSubject,
       text,
       source,
       created_at: now,
     }));
     const newGrowthAreas: ProfileInsight[] = (parsed.growth_areas ?? []).map((text) => ({
+      id: crypto.randomUUID(),
       subject: safeSubject,
       text,
       source,
