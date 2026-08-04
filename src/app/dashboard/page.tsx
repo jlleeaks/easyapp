@@ -10,7 +10,7 @@ import { GrowthMomentCard } from "@/components/ui/GrowthMomentCard";
 import { BuildingTowardSection } from "@/components/ui/BuildingTowardSection";
 import { AskEasyMiniPrompt } from "@/components/ui/AskEasyMiniPrompt";
 import { getTonightSuggestions } from "@/lib/suggestions";
-import { areaForFocusText, computeRoadmap } from "@/lib/roadmap";
+import { areaForFocusText, computeRoadmap, deterministicFallbackSuggestion } from "@/lib/roadmap";
 import type { Book, ChildProfile, Session, Skill } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -41,26 +41,29 @@ export default async function DashboardPage() {
   ]);
   const sessions = allSessions ?? [];
 
-  // Resolve tonight's suggestion server-side (no client loading delay) and ground
-  // its "why" against the same roadmap state Progress shows, so the two can't disagree.
-  let suggestion = null;
-  let suggestionArea = null;
-  try {
-    const suggestions = await getTonightSuggestions(child, skills ?? [], sessions);
-    suggestion = suggestions?.[0] ?? null;
-    if (suggestion) {
-      suggestionArea = areaForFocusText(suggestion.subject, suggestion.focus);
-    }
-  } catch {
-    suggestion = null;
-  }
-
   const roadmap = computeRoadmap({
     skills: skills ?? [],
     sessions,
     strengths: child.strengths ?? [],
     growthAreas: child.growth_areas ?? [],
   });
+
+  // Resolve tonight's suggestion server-side (no client loading delay) and ground
+  // its "why" against the same roadmap state Progress shows, so the two can't disagree.
+  // Easy should suggest something no matter what — if the AI call fails or times out,
+  // fall back to a deterministic, roadmap-grounded pick (optionally steered by the
+  // parent's own stated weekly focus) rather than showing an empty state.
+  let suggestion = null;
+  try {
+    const suggestions = await getTonightSuggestions(child, skills ?? [], sessions);
+    suggestion = suggestions?.[0] ?? null;
+  } catch {
+    suggestion = null;
+  }
+  if (!suggestion) {
+    suggestion = deterministicFallbackSuggestion(roadmap, child.weekly_goals?.focus_area);
+  }
+  const suggestionArea = areaForFocusText(suggestion.subject, suggestion.focus);
 
   return (
     <Shell wide>
@@ -83,7 +86,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-6">
-        <BuildingTowardSection childName={child.name} roadmap={roadmap} />
+        <BuildingTowardSection childName={child.name} roadmap={roadmap} sessions={sessions} />
       </div>
 
       <div className="mt-6">

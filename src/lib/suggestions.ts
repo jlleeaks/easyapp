@@ -28,15 +28,17 @@ export async function getTonightSuggestions(
     areas: roadmap.filter((r) => r.area.subject === s.key).map((r) => ({ area: r.area.area, state: r.state })),
   }));
 
+  const focusArea = child.weekly_goals?.focus_area?.trim();
+
   const parsed = await callClaudeJSON<{ suggestions: Suggestion[] }>({
     system: SUGGEST_FOCUS_SYSTEM,
     userContent: [
       {
         type: "text",
-        text: `Child profile: ${JSON.stringify(childProfileForPrompt(child))}\nCurrently tracked skills: ${JSON.stringify(skills)}\nroadmap: ${JSON.stringify(roadmapContext)}`,
+        text: `Child profile: ${JSON.stringify(childProfileForPrompt(child))}\nCurrently tracked skills: ${JSON.stringify(skills)}\nroadmap: ${JSON.stringify(roadmapContext)}${focusArea ? `\nThe parent has said they specifically want to build toward this week: "${focusArea}" — strongly prefer a suggestion that serves this, and reference it in your reason.` : ""}`,
       },
     ],
-    maxTokens: 900,
+    maxTokens: 1400,
   });
 
   return parsed?.suggestions?.length ? parsed.suggestions : null;

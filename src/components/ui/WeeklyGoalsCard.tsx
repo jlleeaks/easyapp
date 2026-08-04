@@ -9,7 +9,11 @@ import { NumericProgressBar } from "@/components/ui/MilestoneProgressBar";
 import { thisWeekCounts } from "@/lib/streak";
 import type { Session, WeeklyGoals } from "@/lib/types";
 
-const METRICS: { key: keyof Omit<WeeklyGoals, "updated_at">; label: string; source: Session["source"] }[] = [
+const METRICS: {
+  key: keyof Pick<WeeklyGoals, "read_together_target" | "practice_target" | "homework_target">;
+  label: string;
+  source: Session["source"];
+}[] = [
   { key: "read_together_target", label: "Read together", source: "library" },
   { key: "practice_target", label: "Practice activities", source: "practice" },
   { key: "homework_target", label: "Homework completed", source: "homework" },
@@ -50,6 +54,24 @@ function GoalInput({ label, value, onChange }: { label: string; value: number; o
   );
 }
 
+function FocusInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className="text-xs font-semibold mb-1 block" style={{ color: PALETTE.ink }}>
+        What do you want to build toward this week? <span style={{ color: PALETTE.inkFaint, fontWeight: 400 }}>(optional)</span>
+      </label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value.slice(0, 200))}
+        placeholder="e.g. longer sentences, or asking for help more confidently"
+        className="w-full px-3 py-2 text-sm outline-none"
+        style={{ borderRadius: RADIUS.sm, border: `1.5px solid ${PALETTE.line}`, background: "#fff" }}
+      />
+    </div>
+  );
+}
+
 export function WeeklyGoalsCard({
   childId,
   childName,
@@ -64,7 +86,7 @@ export function WeeklyGoalsCard({
   const router = useRouter();
   const [goals, setGoals] = useState(weeklyGoals);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState({ read_together_target: 5, practice_target: 3, homework_target: 3 });
+  const [draft, setDraft] = useState({ read_together_target: 5, practice_target: 3, homework_target: 3, focus_area: "" });
   const [suggestReason, setSuggestReason] = useState<string | null>(null);
   const [suggesting, setSuggesting] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -78,6 +100,7 @@ export function WeeklyGoalsCard({
         read_together_target: goals.read_together_target,
         practice_target: goals.practice_target,
         homework_target: goals.homework_target,
+        focus_area: goals.focus_area ?? "",
       });
     }
     setSuggestReason(null);
@@ -99,11 +122,12 @@ export function WeeklyGoalsCard({
         setError(data.error || "Couldn't suggest goals — try again.");
         return;
       }
-      setDraft({
+      setDraft((d) => ({
+        ...d,
         read_together_target: data.read_together_target,
         practice_target: data.practice_target,
         homework_target: data.homework_target,
-      });
+      }));
       setSuggestReason(data.reason ?? null);
     } catch {
       setError("Couldn't reach Easy — check your connection and try again.");
@@ -146,6 +170,7 @@ export function WeeklyGoalsCard({
           <GoalInput label="Read together (times)" value={draft.read_together_target} onChange={(v) => setDraft((d) => ({ ...d, read_together_target: v }))} />
           <GoalInput label="Practice activities" value={draft.practice_target} onChange={(v) => setDraft((d) => ({ ...d, practice_target: v }))} />
           <GoalInput label="Homework completed" value={draft.homework_target} onChange={(v) => setDraft((d) => ({ ...d, homework_target: v }))} />
+          <FocusInput value={draft.focus_area} onChange={(v) => setDraft((d) => ({ ...d, focus_area: v }))} />
         </div>
         <button
           onClick={suggestForMe}
@@ -220,6 +245,16 @@ export function WeeklyGoalsCard({
           <GoalRow key={m.key} label={m.label} count={counts[m.source] ?? 0} target={goals[m.key]} />
         ))}
       </div>
+      {goals.focus_area && (
+        <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${PALETTE.line}` }}>
+          <p className="text-[10px] font-bold uppercase mb-0.5" style={{ color: PALETTE.inkFaint }}>
+            Building toward this week
+          </p>
+          <p className="text-sm font-semibold" style={{ color: PALETTE.ink }}>
+            {goals.focus_area}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

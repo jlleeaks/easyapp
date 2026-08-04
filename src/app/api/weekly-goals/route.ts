@@ -16,15 +16,19 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { childId, read_together_target, practice_target, homework_target } = body as {
+  const { childId, read_together_target, practice_target, homework_target, focus_area } = body as {
     childId: string;
     read_together_target: number;
     practice_target: number;
     homework_target: number;
+    focus_area?: string;
   };
 
   if (!childId || !isValidTarget(read_together_target) || !isValidTarget(practice_target) || !isValidTarget(homework_target)) {
     return NextResponse.json({ error: "Missing or invalid goal values." }, { status: 400 });
+  }
+  if (focus_area !== undefined && (typeof focus_area !== "string" || focus_area.length > 200)) {
+    return NextResponse.json({ error: "Focus text is too long." }, { status: 400 });
   }
 
   const { data: child, error: childError } = await supabase
@@ -41,6 +45,7 @@ export async function POST(request: Request) {
     read_together_target,
     practice_target,
     homework_target,
+    focus_area: focus_area?.trim() || null,
     updated_at: new Date().toISOString(),
   };
 

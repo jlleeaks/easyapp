@@ -1,6 +1,7 @@
 import { KINDERGARTEN_STANDARDS, matchAreaByText, type StandardArea, type LearningState } from "@/lib/standards";
 import { SKILL_STAGES } from "@/lib/palette";
-import type { Skill, Session, ProfileInsight, LearningPattern, InsightSource } from "@/lib/types";
+import { SUBJECTS } from "@/lib/subjects";
+import type { Skill, Session, ProfileInsight, LearningPattern, InsightSource, Subject } from "@/lib/types";
 
 export type RoadmapEvidence = {
   type: "session" | "insight";
@@ -92,6 +93,50 @@ export function nextStepForSubject(items: AreaRoadmap[]): AreaRoadmap | null {
     notObserved[0] ??
     null
   );
+}
+
+/**
+ * A guaranteed, non-AI suggestion for Home when the AI call fails or returns nothing —
+ * "Easy should suggest something no matter what." Deterministic and always grounded in
+ * the same roadmap state Progress shows: picks whichever subject has the most-evidenced
+ * not-yet-comfortable area, falling back to a natural kindergarten starting point (math
+ * counting) if literally nothing has been observed yet. Optionally steered by a parent's
+ * own stated weekly focus text when one is set, matched against the curriculum the same
+ * way any other free text is.
+ */
+export function deterministicFallbackSuggestion(
+  roadmap: AreaRoadmap[],
+  focusText?: string | null,
+): { subject: Subject; focus: string; reason: string } {
+  if (focusText?.trim()) {
+    for (const s of SUBJECTS) {
+      const matched = matchAreaByText(s.key, focusText);
+      if (matched) {
+        return {
+          subject: s.key,
+          focus: matched.area,
+          reason: `You said you wanted to focus on this this week: "${focusText.trim()}."`,
+        };
+      }
+    }
+  }
+
+  const bySubject = SUBJECTS.map((s) => ({
+    subject: s.key,
+    item: nextStepForSubject(roadmap.filter((r) => r.area.subject === s.key)),
+  }));
+  const withEvidence = bySubject.filter((b) => b.item && b.item.evidence.length > 0);
+  const pick = withEvidence.sort((a, b) => (b.item?.evidence.length ?? 0) - (a.item?.evidence.length ?? 0))[0] ?? bySubject[0];
+  const item = pick.item ?? nextStepForSubject(roadmap.filter((r) => r.area.subject === "math"));
+  const hasEvidence = (item?.evidence.length ?? 0) > 0;
+
+  return {
+    subject: pick.subject,
+    focus: item?.area.area ?? "Counting and numbers",
+    reason: hasEvidence
+      ? (item!.evidence[0]?.text ?? `A good next step in ${(item!.area.area ?? "this area").toLowerCase()}.`)
+      : `A natural starting point for kindergarten ${pick.subject}.`,
+  };
 }
 
 /** Best-effort match of a suggest-focus recommendation onto a curated roadmap area, for display only. */

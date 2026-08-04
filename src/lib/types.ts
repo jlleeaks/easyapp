@@ -38,6 +38,8 @@ export type WeeklyGoals = {
   read_together_target: number;
   practice_target: number;
   homework_target: number;
+  /** Free-text, parent-authored — "what we want to build toward this week." Steers tonight's suggestion when set. */
+  focus_area?: string | null;
   updated_at: string;
 };
 
