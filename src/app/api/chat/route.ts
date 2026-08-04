@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { CHAT_SYSTEM, callClaudeConversationJSON, childProfileForPrompt } from "@/lib/anthropic";
+import { CHAT_SYSTEM, callClaudeConversation, parseJSON, childProfileForPrompt } from "@/lib/anthropic";
 import type { ChatAction, ChatMessage, ChildProfile } from "@/lib/types";
 
 type ChatReply = { reply: string; action: ChatAction };
@@ -52,14 +52,28 @@ export async function POST(request: Request) {
       .reverse()
       .map((m) => ({ role: m.role, content: m.content }));
 
-    const parsed = await callClaudeConversationJSON<ChatReply>({
-      system: `${CHAT_SYSTEM}\n\nChild profile for context: ${JSON.stringify(childProfileForPrompt(child))}`,
-      messages: [...priorTurns, { role: "user" as const, content: message.trim() }],
-      maxTokens: 1000,
-    });
+    const system = `${CHAT_SYSTEM}\n\nChild profile for context: ${JSON.stringify(childProfileForPrompt(child))}`;
+    const messages = [...priorTurns, { role: "user" as const, content: message.trim() }];
 
-    const reply = parsed?.reply || "Sorry, I didn't catch that — could you try rephrasing?";
-    const action = parsed?.action ?? null;
+    // The model occasionally ignores the JSON envelope entirely for answers that read like
+    // a "plan" (breaking straight into markdown) despite the system prompt forbidding it.
+    // Rather than let that show the parent a hard "didn't catch that" error, fall back to
+    // using the raw reply text directly — a real answer with no action button beats no
+    // answer at all. Only retry once before falling back, same budget as the JSON path had.
+    let reply: string | null = null;
+    let action: ChatAction = null;
+    let lastText = "";
+    for (let attempt = 0; attempt < 2 && !reply; attempt++) {
+      lastText = await callClaudeConversation({ system, messages, maxTokens: 1000 });
+      const parsed = parseJSON<ChatReply>(lastText);
+      if (parsed?.reply) {
+        reply = parsed.reply;
+        action = parsed.action ?? null;
+      }
+    }
+    if (!reply) {
+      reply = lastText.trim() || "Sorry, I didn't catch that — could you try rephrasing?";
+    }
 
     const { error: assistantInsertError } = await supabase
       .from("chat_messages")

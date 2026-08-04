@@ -6,6 +6,7 @@ import { HomeGreeting } from "@/components/ui/HomeGreeting";
 import { TonightActivityHero } from "@/components/ui/TonightActivityCard";
 import { WeeklyGoalsCard } from "@/components/ui/WeeklyGoalsCard";
 import { TopOffWithStory } from "@/components/ui/TopOffWithStory";
+import { GrowthMomentCard } from "@/components/ui/GrowthMomentCard";
 import { BuildingTowardSection } from "@/components/ui/BuildingTowardSection";
 import { AskEasyMiniPrompt } from "@/components/ui/AskEasyMiniPrompt";
 import { getTonightSuggestions } from "@/lib/suggestions";
@@ -76,8 +77,9 @@ export default async function DashboardPage() {
         <WeeklyGoalsCard childId={child.id} childName={child.name} weeklyGoals={child.weekly_goals ?? null} sessions={sessions} />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-col gap-3">
         <TopOffWithStory childName={child.name} books={books ?? []} librarySessions={sessions.filter((s) => s.source === "library")} />
+        <GrowthMomentCard childName={child.name} />
       </div>
 
       <div className="mt-6">

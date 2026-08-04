@@ -47,7 +47,7 @@ export async function POST(request: Request) {
           text: `Child profile: ${JSON.stringify(childProfileForPrompt(child))}\nTonight's ${safeSubject} focus: ${topic}${reason ? `\nWhy this, tonight: ${reason}` : ""}`,
         },
       ],
-      maxTokens: 1500,
+      maxTokens: 2400,
     });
 
     if (!briefing) {

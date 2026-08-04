@@ -21,10 +21,10 @@ const STARTERS = [
 
 const ASK_EASY_PROMPTS = [
   "How do I explain “more than” simply?",
-  "She won't sit still for homework — any tips?",
+  "She understands it but can't do it — what should I try?",
   "How much reading is enough at this age?",
-  "He gets frustrated and shuts down — how do I help?",
-  "What should we focus on with her this week?",
+  "How should I respond when she gets frustrated?",
+  "How can we practice asking for help?",
   "How do I make math practice feel like a game?",
 ];
 

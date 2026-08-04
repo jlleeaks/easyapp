@@ -389,6 +389,19 @@ export function LibraryScreen({
                 </div>
               </Card>
             )}
+            {viewing.real_life_practice && (
+              <Card accent={PALETTE.violetLine} tint={PALETTE.violetSoft}>
+                <div className="p-5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Sparkles size={13} color={PALETTE.violetDeep} />
+                    <Eyebrow color={PALETTE.violetDeep}>Practice it in real life</Eyebrow>
+                  </div>
+                  <div className="text-sm">
+                    <AiMarkdown content={viewing.real_life_practice} />
+                  </div>
+                </div>
+              </Card>
+            )}
           </>
         ) : (
           <Card>

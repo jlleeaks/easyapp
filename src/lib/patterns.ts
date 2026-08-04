@@ -1,5 +1,9 @@
 import type { CheckinAnswers, LibraryCheckinAnswers, LearningPattern, Subject } from "@/lib/types";
 
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 const WORKED_LABELS: Record<string, string> = {
   "the analogy": "using an analogy",
   "the hands-on approach": "hands-on objects",
@@ -14,6 +18,19 @@ export function deriveHomeworkLearningPatterns(subject: Subject, skill: string, 
   const now = new Date().toISOString();
   const out: LearningPattern[] = [];
   const workedLabel = WORKED_LABELS[checkin.worked] ?? checkin.worked;
+
+  if (checkin.execution_difficulty && checkin.execution_difficulty !== "nothing else") {
+    out.push({
+      id: crypto.randomUUID(),
+      subject,
+      observation: `${checkin.execution_difficulty === "writing/hand fatigue" ? "Physical writing/hand fatigue" : capitalize(checkin.execution_difficulty)} affected execution during ${skill}, separate from understanding the concept`,
+      trigger: skill,
+      parent_response: null,
+      helped: null,
+      source: "session",
+      created_at: now,
+    });
+  }
 
   if (checkin.frustration !== "not really") {
     out.push({

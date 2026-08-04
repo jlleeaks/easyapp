@@ -8,10 +8,15 @@ import type { Briefing } from "@/lib/types";
 export function CompactBriefingView({ briefing }: { briefing: Briefing }) {
   const opening = briefing.analogies?.[0] || briefing.why_it_matters;
   const askWhileTeaching = briefing.followup_questions?.[0];
+  const supportTags = [
+    briefing.fine_motor_support ? "fine motor" : null,
+    briefing.social_emotional_support ? "social-emotional" : null,
+    briefing.independence_skill ? "independence" : null,
+  ].filter(Boolean);
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-1">
         <h2 className="font-serif-display" style={{ fontSize: 21, fontWeight: 700 }}>{briefing.skill}</h2>
         {briefing.estimated_minutes && (
           <span
@@ -22,6 +27,12 @@ export function CompactBriefingView({ briefing }: { briefing: Briefing }) {
           </span>
         )}
       </div>
+      {supportTags.length > 0 && (
+        <p className="text-xs mb-3" style={{ color: PALETTE.inkFaint }}>
+          Also supports: {supportTags.join(", ")}
+        </p>
+      )}
+      {supportTags.length === 0 && <div className="mb-4" />}
 
       {briefing.household_objects?.length > 0 && (
         <Card>
@@ -49,7 +60,10 @@ export function CompactBriefingView({ briefing }: { briefing: Briefing }) {
         <div className="p-4">
           <Eyebrow>3 steps</Eyebrow>
           <ol className="text-sm mt-1 flex flex-col gap-2">
-            <li><span className="font-bold">1.</span> Show it using what you grabbed above.</li>
+            <li>
+              <span className="font-bold">1.</span>{" "}
+              {briefing.parent_model ? <AiMarkdown content={briefing.parent_model} inline /> : "Show it using what you grabbed above."}
+            </li>
             {askWhileTeaching && (
               <li>
                 <span className="font-bold">2.</span> Ask: <AiMarkdown content={askWhileTeaching} inline />

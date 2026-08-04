@@ -28,6 +28,10 @@ const CHECKIN_FIELDS: { key: keyof Pick<CheckinAnswers, "overall" | "frustration
   { key: "worked", label: "What actually worked?", options: ["the analogy", "the hands-on approach", "something I improvised"] },
 ];
 
+// Optional, not required for checkinComplete — helps Easy tell a physical/attention/confidence
+// struggle apart from an actual academic misunderstanding (the "execution gap").
+const EXECUTION_DIFFICULTY_OPTIONS = ["frustration", "low confidence", "attention", "writing/hand fatigue", "difficulty using materials", "nothing else"];
+
 export function PracticeFlow({
   childId,
   childName,
@@ -314,6 +318,12 @@ export function PracticeFlow({
                 onChange={(v) => setCheckinAnswers((a) => ({ ...a, [f.key]: v }))}
               />
             ))}
+            <ChoiceGroup
+              label="Was anything besides the concept making this difficult? (optional)"
+              options={EXECUTION_DIFFICULTY_OPTIONS}
+              value={checkinAnswers.execution_difficulty ?? ""}
+              onChange={(v) => setCheckinAnswers((a) => ({ ...a, execution_difficulty: v }))}
+            />
             <TextField label="Anything else worth noting?" value={notes} onChange={setNotes} optional />
           </div>
         </Card>

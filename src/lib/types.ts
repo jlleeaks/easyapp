@@ -121,6 +121,17 @@ export type Briefing = {
   /** Only present for a logged graded assignment (never a coaching briefing) — see AssignmentRecapView. */
   went_well?: string[];
   to_improve?: string[];
+  /**
+   * Execution-gap fields (see product principle: explaining a skill isn't the same as the
+   * child being able to do it). All optional and shown only when genuinely relevant to this
+   * specific activity — never padded out for the sake of completeness.
+   */
+  child_action?: string;
+  parent_model?: string;
+  what_success_looks_like?: string;
+  fine_motor_support?: string;
+  social_emotional_support?: string;
+  independence_skill?: string;
 };
 
 export type CheckinAnswers = {
@@ -128,6 +139,8 @@ export type CheckinAnswers = {
   frustration: "not really" | "a little" | "yes, a lot";
   worked: string;
   notes?: string;
+  /** What made this hard beyond the academic concept itself, if anything — see activity debrief. */
+  execution_difficulty?: string;
 };
 
 export type LibraryCheckinAnswers = {
@@ -169,6 +182,8 @@ export type Book = {
   discussion_questions: string[] | null;
   read_aloud_tip: string | null;
   estimated_minutes: string | null;
+  /** Optional — only when the story naturally connects to a real-world social/independence moment. */
+  real_life_practice: string | null;
   created_at: string;
 };
 

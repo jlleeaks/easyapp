@@ -265,3 +265,7 @@ create index if not exists sessions_book_id_idx on public.sessions (book_id);
 -- practice_target, homework_target, updated_at }. Null until the parent sets them (or
 -- accepts an AI suggestion) — Home must never fabricate a target the parent didn't choose.
 alter table public.children add column if not exists weekly_goals jsonb;
+
+-- Optional "practice it in real life" callout on a book's story guide — only populated when
+-- the story naturally connects to a real-world social/independence moment worth trying.
+alter table public.books add column if not exists real_life_practice text;

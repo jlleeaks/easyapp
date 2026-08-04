@@ -32,6 +32,31 @@ export function BriefingView({ briefing }: { briefing: Briefing }) {
         </div>
       </Card>
 
+      {(briefing.parent_model || briefing.child_action || briefing.what_success_looks_like) && (
+        <Card accent={PALETTE.brandLine} tint={PALETTE.brandSoft} delay={DELAY[0]}>
+          <div className="p-5 flex flex-col gap-3">
+            {briefing.parent_model && (
+              <div>
+                <Eyebrow color={PALETTE.brand}>Show her first</Eyebrow>
+                <div className="text-sm"><AiMarkdown content={briefing.parent_model} /></div>
+              </div>
+            )}
+            {briefing.child_action && (
+              <div>
+                <Eyebrow color={PALETTE.brand}>Then she&apos;ll</Eyebrow>
+                <div className="text-sm"><AiMarkdown content={briefing.child_action} /></div>
+              </div>
+            )}
+            {briefing.what_success_looks_like && (
+              <div>
+                <Eyebrow color={PALETTE.brand}>What success looks like</Eyebrow>
+                <div className="text-sm"><AiMarkdown content={briefing.what_success_looks_like} /></div>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
       <Card delay={DELAY[1]}>
         <div className="p-5">
           <Eyebrow>Analogies to try</Eyebrow>
@@ -121,6 +146,25 @@ export function BriefingView({ briefing }: { briefing: Briefing }) {
             <Eyebrow color={PALETTE.brand}>A note for you</Eyebrow>
             <div className="text-sm">
               <AiMarkdown content={briefing.math_anxiety_note} />
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {(briefing.fine_motor_support || briefing.social_emotional_support || briefing.independence_skill) && (
+        <Card delay={DELAY[8]}>
+          <div className="p-5">
+            <Eyebrow>Also supports</Eyebrow>
+            <div className="flex flex-col gap-2 mt-1">
+              {briefing.fine_motor_support && (
+                <div className="text-sm">✋ <AiMarkdown content={briefing.fine_motor_support} inline /></div>
+              )}
+              {briefing.social_emotional_support && (
+                <div className="text-sm">💛 <AiMarkdown content={briefing.social_emotional_support} inline /></div>
+              )}
+              {briefing.independence_skill && (
+                <div className="text-sm">🌱 <AiMarkdown content={briefing.independence_skill} inline /></div>
+              )}
             </div>
           </div>
         </Card>

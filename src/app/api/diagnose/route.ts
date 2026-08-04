@@ -56,7 +56,7 @@ export async function POST(request: Request) {
           source: { type: "base64", media_type: safeMediaType, data: imageBase64 },
         },
       ],
-      maxTokens: 1500,
+      maxTokens: 2400,
     });
 
     if (!briefing) {

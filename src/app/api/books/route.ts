@@ -8,6 +8,7 @@ type BookGuide = {
   discussion_questions: string[];
   read_aloud_tip: string;
   estimated_minutes: string;
+  real_life_practice?: string;
 };
 
 export async function POST(request: Request) {
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
       discussion_questions: guide?.discussion_questions ?? null,
       read_aloud_tip: guide?.read_aloud_tip ?? null,
       estimated_minutes: guide?.estimated_minutes ?? null,
+      real_life_practice: guide?.real_life_practice?.trim() || null,
     })
     .select("*")
     .single();
