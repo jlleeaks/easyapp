@@ -50,6 +50,10 @@ export type StandardArea = {
   nextGrade: string; // parent-friendly 1st-grade continuation
 };
 
+// Within each subject, areas are ordered foundational-to-complex (roughly the order a
+// typical kindergarten year introduces them) so Progress reads as a sequence, not a
+// random list — e.g. math builds from counting through shapes/patterns/measurement up to
+// addition and subtraction, since K.OA problems lean on all of those first.
 export const KINDERGARTEN_STANDARDS: StandardArea[] = [
   // ---- Math ----
   {
@@ -75,28 +79,6 @@ export const KINDERGARTEN_STANDARDS: StandardArea[] = [
     nextGrade: "Compare two-digit numbers using place value reasoning.",
   },
   {
-    id: "k-math-addition-subtraction",
-    subject: "math",
-    domain: "Operations and Algebraic Thinking",
-    area: "Addition and subtraction",
-    formalCode: "K.OA.1–5",
-    officialWording: "Represent addition and subtraction with objects, fingers, drawings, or equations; solve problems within 10.",
-    parentWording: "Combine and separate small groups using objects or fingers, working toward simple addition and subtraction within 10.",
-    keywords: ["addition", "subtraction", "add", "combine", "adding", "plus", "minus"],
-    nextGrade: "Add and subtract fluently within 20, using increasingly abstract strategies.",
-  },
-  {
-    id: "k-math-measurement",
-    subject: "math",
-    domain: "Measurement and Data",
-    area: "Measurement and data",
-    formalCode: "K.MD.1–3",
-    officialWording: "Describe and compare measurable attributes (length, weight); classify and count objects into categories.",
-    parentWording: "Describe and compare things by size or weight, and sort objects into simple categories.",
-    keywords: ["measure", "measurement", "sort", "sorting", "bigger", "smaller", "heavier"],
-    nextGrade: "Measure length using standard units and represent data with simple graphs.",
-  },
-  {
     id: "k-math-shapes",
     subject: "math",
     domain: "Geometry",
@@ -117,6 +99,28 @@ export const KINDERGARTEN_STANDARDS: StandardArea[] = [
     parentWording: "Notice, copy, and extend simple repeating patterns (like red-blue-red-blue).",
     keywords: ["pattern", "patterns", "sequence", "repeating"],
     nextGrade: "Extend the idea of patterns into simple number and shape sequences.",
+  },
+  {
+    id: "k-math-measurement",
+    subject: "math",
+    domain: "Measurement and Data",
+    area: "Measurement and data",
+    formalCode: "K.MD.1–3",
+    officialWording: "Describe and compare measurable attributes (length, weight); classify and count objects into categories.",
+    parentWording: "Describe and compare things by size or weight, and sort objects into simple categories.",
+    keywords: ["measure", "measurement", "sort", "sorting", "bigger", "smaller", "heavier"],
+    nextGrade: "Measure length using standard units and represent data with simple graphs.",
+  },
+  {
+    id: "k-math-addition-subtraction",
+    subject: "math",
+    domain: "Operations and Algebraic Thinking",
+    area: "Addition and subtraction",
+    formalCode: "K.OA.1–5",
+    officialWording: "Represent addition and subtraction with objects, fingers, drawings, or equations; solve problems within 10.",
+    parentWording: "Combine and separate small groups using objects or fingers, working toward simple addition and subtraction within 10.",
+    keywords: ["addition", "subtraction", "add", "combine", "adding", "plus", "minus"],
+    nextGrade: "Add and subtract fluently within 20, using increasingly abstract strategies.",
   },
 
   // ---- Reading ----

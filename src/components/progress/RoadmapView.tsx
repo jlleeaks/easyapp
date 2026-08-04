@@ -107,22 +107,40 @@ function AreaDetail({ item, childName }: { item: AreaRoadmap; childName: string 
 }
 
 function ObservedRow({ item, childName }: { item: AreaRoadmap; childName: string }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   return (
     <div style={{ borderBottom: `1px solid ${PALETTE.line}` }}>
-      <button onClick={() => setOpen((v) => !v)} className="w-full flex items-center justify-between gap-3 py-3.5 text-left" aria-expanded={open}>
-        <div className="min-w-0 flex-1">
+      <div className="w-full flex items-center justify-between gap-3 py-3.5">
+        <button onClick={() => setOpen((v) => !v)} className="min-w-0 flex-1 text-left" aria-expanded={open}>
           <p className="text-sm font-bold mb-0.5">{item.area.area}</p>
           <StateMarker state={item.state} />
           <div className="mt-1.5 max-w-[140px]">
             <DevelopmentalStageBar state={item.state} />
           </div>
+        </button>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <button
+            onClick={() => {
+              const params = new URLSearchParams({ subject: item.area.subject, topic: item.area.area });
+              router.push(`/practice?${params.toString()}`);
+            }}
+            className="text-xs font-bold underline"
+            style={{ color: PALETTE.brand }}
+          >
+            Build activity
+          </button>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="flex items-center gap-1 text-xs font-bold"
+            style={{ color: PALETTE.inkSoft }}
+            aria-expanded={open}
+          >
+            {open ? "Hide" : "Details"}
+            {open ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+          </button>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0 text-xs font-bold" style={{ color: PALETTE.brand }}>
-          {open ? "Hide" : "View details"}
-          {open ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
-        </div>
-      </button>
+      </div>
       {!open && item.evidence[0] && (
         <p className="text-sm pb-3 -mt-2" style={{ color: PALETTE.inkSoft }}>{item.evidence[0].text}</p>
       )}
