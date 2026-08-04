@@ -139,6 +139,32 @@ export function deterministicFallbackSuggestion(
   };
 }
 
+/**
+ * Deterministic, non-AI picks for "other activities this week" — one candidate per subject
+ * other than whichever subject Tonight's activity already used, so a parent who'd rather
+ * not do tonight's pick has concrete, roadmap-grounded alternatives instead of nothing.
+ * Used as a fallback when the AI's own multi-suggestion list isn't available.
+ */
+export function deterministicOtherActivities(
+  roadmap: AreaRoadmap[],
+  excludeSubject: Subject,
+): { subject: Subject; focus: string; reason: string }[] {
+  return SUBJECTS.filter((s) => s.key !== excludeSubject)
+    .map((s) => {
+      const item = nextStepForSubject(roadmap.filter((r) => r.area.subject === s.key));
+      if (!item) return null;
+      const hasEvidence = item.evidence.length > 0;
+      return {
+        subject: s.key,
+        focus: item.area.area,
+        reason: hasEvidence
+          ? (item.evidence[0]?.text ?? `A good next step in ${item.area.area.toLowerCase()}.`)
+          : `A natural starting point for kindergarten ${s.key}.`,
+      };
+    })
+    .filter((x): x is { subject: Subject; focus: string; reason: string } => x !== null);
+}
+
 /** Best-effort match of a suggest-focus recommendation onto a curated roadmap area, for display only. */
 export function areaForFocusText(subject: string, focusText: string): StandardArea | null {
   if (subject !== "math" && subject !== "writing" && subject !== "reading") return null;

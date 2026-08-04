@@ -6,9 +6,42 @@ import { Sparkles, Target } from "lucide-react";
 import { PALETTE, RADIUS } from "@/lib/palette";
 import { PrimaryButton } from "@/components/ui/primitives";
 import { NumericProgressBar } from "@/components/ui/MilestoneProgressBar";
-import { thisWeekCounts } from "@/lib/streak";
+import { thisWeekCounts, thisWeekCountBySubject } from "@/lib/streak";
+import { subjectMeta } from "@/lib/subjects";
 import type { SuggestedWeeklyGoals } from "@/lib/suggestions";
-import type { Session, WeeklyGoals } from "@/lib/types";
+import type { StandardArea } from "@/lib/standards";
+import type { Session, Subject, WeeklyGoals } from "@/lib/types";
+
+type OtherActivity = { subject: Subject; focus: string; reason: string; area: StandardArea | null };
+
+/** Fixed, realistic weekly aim for an "other activity" pick — these are optional alternatives, not a hard target. */
+const OTHER_ACTIVITY_TARGET = 3;
+
+function OtherActivityCard({ activity, count, onStart }: { activity: OtherActivity; count: number; onStart: () => void }) {
+  const meta = subjectMeta(activity.subject);
+  return (
+    <div className="rounded-xl p-3" style={{ background: meta.soft, border: `1px solid ${PALETTE.line}` }}>
+      <div className="flex items-center justify-between mb-1.5 gap-2">
+        <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ background: "#fff", color: meta.color }}>
+          {meta.label}
+        </span>
+        <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: PALETTE.inkSoft }}>
+          {count} of {OTHER_ACTIVITY_TARGET} this week
+        </span>
+      </div>
+      <p className="text-sm font-bold leading-snug mb-0.5" style={{ color: PALETTE.ink }}>
+        {activity.focus}
+      </p>
+      <p className="text-xs italic mb-2" style={{ color: meta.color }}>
+        Builds toward {meta.label}
+      </p>
+      <NumericProgressBar observed={count} total={OTHER_ACTIVITY_TARGET} fillColor={meta.color} />
+      <button onClick={onStart} className="text-xs font-bold underline mt-2" style={{ color: meta.color }}>
+        Start this instead
+      </button>
+    </div>
+  );
+}
 
 const METRICS: {
   key: keyof Pick<WeeklyGoals, "read_together_target" | "practice_target" | "homework_target">;
@@ -78,15 +111,22 @@ export function WeeklyGoalsCard({
   childName,
   weeklyGoals,
   suggestedGoals,
+  otherActivities,
   sessions,
 }: {
   childId: string;
   childName: string;
   weeklyGoals: WeeklyGoals | null;
   suggestedGoals: SuggestedWeeklyGoals | null;
+  otherActivities: OtherActivity[];
   sessions: Session[];
 }) {
   const router = useRouter();
+
+  function startOther(activity: OtherActivity) {
+    const params = new URLSearchParams({ subject: activity.subject, topic: activity.focus, reason: activity.reason });
+    router.push(`/practice?${params.toString()}`);
+  }
   const [goals, setGoals] = useState(weeklyGoals);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({ read_together_target: 5, practice_target: 3, homework_target: 3, focus_area: "" });
@@ -268,11 +308,28 @@ export function WeeklyGoalsCard({
           )}
         </div>
       )}
-      <div className="flex flex-col gap-4 flex-1" style={{ marginTop: isSuggested ? 0 : 12 }}>
+      <div className="flex flex-col gap-4" style={{ marginTop: isSuggested ? 0 : 12 }}>
         {METRICS.map((m) => (
           <GoalRow key={m.key} label={m.label} count={counts[m.source] ?? 0} target={effectiveGoals[m.key]} />
         ))}
       </div>
+      {otherActivities.length > 0 && (
+        <div className="mt-4 pt-3 flex-1" style={{ borderTop: `1px solid ${PALETTE.line}` }}>
+          <p className="text-[10px] font-bold uppercase mb-2" style={{ color: PALETTE.inkFaint, letterSpacing: "0.06em" }}>
+            Rather not do tonight&apos;s pick? Try one of these
+          </p>
+          <div className="flex flex-col gap-2.5">
+            {otherActivities.map((a) => (
+              <OtherActivityCard
+                key={`${a.subject}-${a.focus}`}
+                activity={a}
+                count={thisWeekCountBySubject(sessions, a.subject)}
+                onStart={() => startOther(a)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
       {goals?.focus_area && (
         <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${PALETTE.line}` }}>
           <p className="text-[10px] font-bold uppercase mb-0.5" style={{ color: PALETTE.inkFaint }}>

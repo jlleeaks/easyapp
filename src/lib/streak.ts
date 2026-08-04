@@ -26,7 +26,7 @@ export function last7DaysActivity(sessionDates: string[]) {
   return result;
 }
 
-function mondayOfThisWeek(): Date {
+export function mondayOfThisWeek(): Date {
   const now = new Date();
   const dayOfWeek = now.getDay();
   const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -45,6 +45,12 @@ export function thisWeekCounts(sessions: { source: string; created_at: string }[
     counts[s.source] = (counts[s.source] ?? 0) + 1;
   }
   return counts;
+}
+
+/** How many times a specific subject has come up in a session since this calendar week's Monday. */
+export function thisWeekCountBySubject(sessions: { subject: string; created_at: string }[], subject: string): number {
+  const monday = mondayOfThisWeek();
+  return sessions.filter((s) => s.subject === subject && new Date(s.created_at) >= monday).length;
 }
 
 const WEEKDAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
