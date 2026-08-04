@@ -47,6 +47,9 @@ export function thisWeekCounts(sessions: { source: string; created_at: string }[
   return counts;
 }
 
+/** Fixed, realistic weekly aim for a single subject's activity count — shown next to any subject-scoped "X of Y this week" count on Home. */
+export const WEEKLY_SUBJECT_TARGET = 3;
+
 /** How many times a specific subject has come up in a session since this calendar week's Monday. */
 export function thisWeekCountBySubject(sessions: { subject: string; created_at: string }[], subject: string): number {
   const monday = mondayOfThisWeek();

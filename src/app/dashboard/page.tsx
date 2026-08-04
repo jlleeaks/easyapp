@@ -97,7 +97,7 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-2">
-          <TonightActivityHero childName={child.name} suggestion={suggestion} area={suggestionArea} />
+          <TonightActivityHero childName={child.name} suggestion={suggestion} area={suggestionArea} sessions={sessions} />
         </div>
         <WeeklyGoalsCard
           childId={child.id}

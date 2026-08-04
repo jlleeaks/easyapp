@@ -6,16 +6,13 @@ import { Sparkles, Target } from "lucide-react";
 import { PALETTE, RADIUS } from "@/lib/palette";
 import { PrimaryButton } from "@/components/ui/primitives";
 import { NumericProgressBar } from "@/components/ui/MilestoneProgressBar";
-import { thisWeekCounts, thisWeekCountBySubject } from "@/lib/streak";
+import { thisWeekCounts, thisWeekCountBySubject, WEEKLY_SUBJECT_TARGET } from "@/lib/streak";
 import { subjectMeta } from "@/lib/subjects";
 import type { SuggestedWeeklyGoals } from "@/lib/suggestions";
 import type { StandardArea } from "@/lib/standards";
 import type { Session, Subject, WeeklyGoals } from "@/lib/types";
 
 type OtherActivity = { subject: Subject; focus: string; reason: string; area: StandardArea | null };
-
-/** Fixed, realistic weekly aim for an "other activity" pick — these are optional alternatives, not a hard target. */
-const OTHER_ACTIVITY_TARGET = 3;
 
 function OtherActivityCard({ activity, count, onStart }: { activity: OtherActivity; count: number; onStart: () => void }) {
   const meta = subjectMeta(activity.subject);
@@ -26,7 +23,7 @@ function OtherActivityCard({ activity, count, onStart }: { activity: OtherActivi
           {meta.label}
         </span>
         <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: PALETTE.inkSoft }}>
-          {count} of {OTHER_ACTIVITY_TARGET} this week
+          {count} of {WEEKLY_SUBJECT_TARGET} this week
         </span>
       </div>
       <p className="text-sm font-bold leading-snug mb-0.5" style={{ color: PALETTE.ink }}>
@@ -35,23 +32,13 @@ function OtherActivityCard({ activity, count, onStart }: { activity: OtherActivi
       <p className="text-xs italic mb-2" style={{ color: meta.color }}>
         Builds toward {meta.label}
       </p>
-      <NumericProgressBar observed={count} total={OTHER_ACTIVITY_TARGET} fillColor={meta.color} />
+      <NumericProgressBar observed={count} total={WEEKLY_SUBJECT_TARGET} fillColor={meta.color} />
       <button onClick={onStart} className="text-xs font-bold underline mt-2" style={{ color: meta.color }}>
         Start this instead
       </button>
     </div>
   );
 }
-
-const METRICS: {
-  key: keyof Pick<WeeklyGoals, "read_together_target" | "practice_target" | "homework_target">;
-  label: string;
-  source: Session["source"];
-}[] = [
-  { key: "read_together_target", label: "Read together", source: "library" },
-  { key: "practice_target", label: "Practice activities", source: "practice" },
-  { key: "homework_target", label: "Homework completed", source: "homework" },
-];
 
 function GoalRow({ label, count, target }: { label: string; count: number; target: number }) {
   return (
@@ -309,27 +296,27 @@ export function WeeklyGoalsCard({
         </div>
       )}
       <div className="flex flex-col gap-4" style={{ marginTop: isSuggested ? 0 : 12 }}>
-        {METRICS.map((m) => (
-          <GoalRow key={m.key} label={m.label} count={counts[m.source] ?? 0} target={effectiveGoals[m.key]} />
-        ))}
-      </div>
-      {otherActivities.length > 0 && (
-        <div className="mt-4 pt-3 flex-1" style={{ borderTop: `1px solid ${PALETTE.line}` }}>
-          <p className="text-[10px] font-bold uppercase mb-2" style={{ color: PALETTE.inkFaint, letterSpacing: "0.06em" }}>
-            Rather not do tonight&apos;s pick? Try one of these
-          </p>
-          <div className="flex flex-col gap-2.5">
-            {otherActivities.map((a) => (
-              <OtherActivityCard
-                key={`${a.subject}-${a.focus}`}
-                activity={a}
-                count={thisWeekCountBySubject(sessions, a.subject)}
-                onStart={() => startOther(a)}
-              />
-            ))}
-          </div>
+        <GoalRow label="Read together" count={counts.library ?? 0} target={effectiveGoals.read_together_target} />
+        <div>
+          <GoalRow label="Practice activities" count={counts.practice ?? 0} target={effectiveGoals.practice_target} />
+          {otherActivities.length > 0 && (
+            <div className="mt-2.5 flex flex-col gap-2">
+              <p className="text-xs" style={{ color: PALETTE.inkFaint }}>
+                Rather not do tonight&apos;s pick? These count toward this goal too:
+              </p>
+              {otherActivities.map((a) => (
+                <OtherActivityCard
+                  key={`${a.subject}-${a.focus}`}
+                  activity={a}
+                  count={thisWeekCountBySubject(sessions, a.subject)}
+                  onStart={() => startOther(a)}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+        <GoalRow label="Homework completed" count={counts.homework ?? 0} target={effectiveGoals.homework_target} />
+      </div>
       {goals?.focus_area && (
         <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${PALETTE.line}` }}>
           <p className="text-[10px] font-bold uppercase mb-0.5" style={{ color: PALETTE.inkFaint }}>

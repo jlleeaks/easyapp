@@ -7,8 +7,9 @@ import { PALETTE } from "@/lib/palette";
 import { subjectMeta } from "@/lib/subjects";
 import { PrimaryButton } from "@/components/ui/primitives";
 import { subjectScene } from "@/components/ui/SubjectScene";
+import { thisWeekCountBySubject, WEEKLY_SUBJECT_TARGET } from "@/lib/streak";
 import type { StandardArea } from "@/lib/standards";
-import type { Subject } from "@/lib/types";
+import type { Session, Subject } from "@/lib/types";
 
 type Suggestion = { subject: Subject; focus: string; reason: string };
 
@@ -16,10 +17,12 @@ export function TonightActivityHero({
   childName,
   suggestion,
   area,
+  sessions,
 }: {
   childName: string;
   suggestion: Suggestion | null;
   area: StandardArea | null;
+  sessions: Session[];
 }) {
   const router = useRouter();
   const [starting, setStarting] = useState(false);
@@ -46,6 +49,7 @@ export function TonightActivityHero({
   }
 
   const meta = subjectMeta(suggestion.subject);
+  const weekCount = thisWeekCountBySubject(sessions, suggestion.subject);
 
   function start() {
     setStarting(true);
@@ -73,6 +77,9 @@ export function TonightActivityHero({
             <Clock size={11} /> 5-10 min
           </span>
           <span>No printing needed</span>
+          <span style={{ color: meta.color, fontWeight: 700 }}>
+            {weekCount} of {WEEKLY_SUBJECT_TARGET} this week
+          </span>
           {area && <span>· {meta.label} → {area.area}</span>}
         </div>
 
