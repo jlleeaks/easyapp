@@ -140,29 +140,31 @@ export function deterministicFallbackSuggestion(
 }
 
 /**
- * Deterministic, non-AI picks for "other activities this week" — one candidate per subject
- * other than whichever subject Tonight's activity already used, so a parent who'd rather
- * not do tonight's pick has concrete, roadmap-grounded alternatives instead of nothing.
- * Used as a fallback when the AI's own multi-suggestion list isn't available.
+ * Deterministic, non-AI picks for "other activities this week" — one candidate per subject,
+ * including tonight's own subject (excluding tonight's exact area so it's a genuine
+ * alternative, not a repeat), so a parent who'd rather not do tonight's pick always has
+ * three concrete, roadmap-grounded options instead of nothing. Always deterministic (not
+ * drawn from the AI's suggestion list) so the count and subject spread stay consistent
+ * regardless of whether the AI call succeeds.
  */
-export function deterministicOtherActivities(
+export function otherActivitiesForWeek(
   roadmap: AreaRoadmap[],
-  excludeSubject: Subject,
+  tonightSubject: Subject,
+  tonightAreaId?: string | null,
 ): { subject: Subject; focus: string; reason: string }[] {
-  return SUBJECTS.filter((s) => s.key !== excludeSubject)
-    .map((s) => {
-      const item = nextStepForSubject(roadmap.filter((r) => r.area.subject === s.key));
-      if (!item) return null;
-      const hasEvidence = item.evidence.length > 0;
-      return {
-        subject: s.key,
-        focus: item.area.area,
-        reason: hasEvidence
-          ? (item.evidence[0]?.text ?? `A good next step in ${item.area.area.toLowerCase()}.`)
-          : `A natural starting point for kindergarten ${s.key}.`,
-      };
-    })
-    .filter((x): x is { subject: Subject; focus: string; reason: string } => x !== null);
+  return SUBJECTS.map((s) => {
+    const items = roadmap.filter((r) => r.area.subject === s.key && !(s.key === tonightSubject && tonightAreaId && r.area.id === tonightAreaId));
+    const item = nextStepForSubject(items);
+    if (!item) return null;
+    const hasEvidence = item.evidence.length > 0;
+    return {
+      subject: s.key,
+      focus: item.area.area,
+      reason: hasEvidence
+        ? (item.evidence[0]?.text ?? `A good next step in ${item.area.area.toLowerCase()}.`)
+        : `A natural starting point for kindergarten ${s.key}.`,
+    };
+  }).filter((x): x is { subject: Subject; focus: string; reason: string } => x !== null);
 }
 
 /** Best-effort match of a suggest-focus recommendation onto a curated roadmap area, for display only. */

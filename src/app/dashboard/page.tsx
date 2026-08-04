@@ -5,12 +5,13 @@ import { Wordmark } from "@/components/ui/primitives";
 import { HomeGreeting } from "@/components/ui/HomeGreeting";
 import { TonightActivityHero } from "@/components/ui/TonightActivityCard";
 import { WeeklyGoalsCard } from "@/components/ui/WeeklyGoalsCard";
+import { OtherActivitiesCard } from "@/components/ui/OtherActivitiesCard";
 import { TopOffWithStory } from "@/components/ui/TopOffWithStory";
 import { GrowthMomentCard } from "@/components/ui/GrowthMomentCard";
 import { BuildingTowardSection } from "@/components/ui/BuildingTowardSection";
 import { AskEasyMiniPrompt } from "@/components/ui/AskEasyMiniPrompt";
 import { deterministicWeeklyGoals, getSuggestedWeeklyGoals, getTonightSuggestions } from "@/lib/suggestions";
-import { areaForFocusText, computeRoadmap, deterministicFallbackSuggestion, deterministicOtherActivities } from "@/lib/roadmap";
+import { areaForFocusText, computeRoadmap, deterministicFallbackSuggestion, otherActivitiesForWeek } from "@/lib/roadmap";
 import type { Book, ChildProfile, Session, Skill } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -53,22 +54,22 @@ export default async function DashboardPage() {
   // Easy should suggest something no matter what — if the AI call fails or times out,
   // fall back to a deterministic, roadmap-grounded pick (optionally steered by the
   // parent's own stated weekly focus) rather than showing an empty state.
-  let suggestions = null;
+  let suggestion = null;
   try {
-    suggestions = await getTonightSuggestions(child, skills ?? [], sessions);
+    const suggestions = await getTonightSuggestions(child, skills ?? [], sessions);
+    suggestion = suggestions?.[0] ?? null;
   } catch {
-    suggestions = null;
+    suggestion = null;
   }
-  let suggestion = suggestions?.[0] ?? null;
   if (!suggestion) {
     suggestion = deterministicFallbackSuggestion(roadmap, child.weekly_goals?.focus_area);
   }
   const suggestionArea = areaForFocusText(suggestion.subject, suggestion.focus);
 
   // A parent who'd rather not do tonight's pick should see concrete, tailored alternatives —
-  // not just an abstract goal counter. Reuse the AI's own multi-suggestion list when it's
-  // there (no extra call), otherwise fall back to one deterministic pick per other subject.
-  const otherRaw = suggestions && suggestions.length > 1 ? suggestions.slice(1, 3) : deterministicOtherActivities(roadmap, suggestion.subject);
+  // always exactly one pick per subject (including tonight's own subject, excluding tonight's
+  // exact area), so this stays predictable regardless of whether the AI call succeeded.
+  const otherRaw = otherActivitiesForWeek(roadmap, suggestion.subject, suggestionArea?.id);
   const otherActivities = otherRaw.map((a) => ({ ...a, area: areaForFocusText(a.subject, a.focus) }));
 
   // Weekly goals should be personalized by default, not an empty form the parent has to
@@ -99,12 +100,15 @@ export default async function DashboardPage() {
         <div className="md:col-span-2">
           <TonightActivityHero childName={child.name} suggestion={suggestion} area={suggestionArea} sessions={sessions} />
         </div>
+        <OtherActivitiesCard activities={otherActivities} sessions={sessions} />
+      </div>
+
+      <div className="mt-4">
         <WeeklyGoalsCard
           childId={child.id}
           childName={child.name}
           weeklyGoals={child.weekly_goals ?? null}
           suggestedGoals={suggestedGoals}
-          otherActivities={otherActivities}
           sessions={sessions}
         />
       </div>
