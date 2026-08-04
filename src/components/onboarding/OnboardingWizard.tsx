@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { PALETTE } from "@/lib/palette";
 import { Card, TextField, ChoiceGroup, PrimaryButton, SecondaryButton } from "@/components/ui/primitives";
 import { createClient } from "@/lib/supabase/client";
+import { WelcomeFlow } from "@/components/onboarding/WelcomeFlow";
 import { EMPTY_CHILD_PROFILE, type ChildProfile, type ChildProfileInput } from "@/lib/types";
 
 const STEPS = ["identity", "temperament", "academic", "reading", "signal"] as const;
@@ -30,6 +31,7 @@ export function OnboardingWizard({
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [justCreated, setJustCreated] = useState(false);
   const [form, setForm] = useState<FormState>(() => ({
     parentName: initialParentName,
     ...EMPTY_CHILD_PROFILE,
@@ -90,19 +92,36 @@ export function OnboardingWizard({
         setSaving(false);
         return;
       }
-    } else {
-      const { error: insertError } = await supabase
-        .from("children")
-        .insert({ ...childFields, parent_id: user.id });
-      if (insertError) {
-        setError("Couldn't save — try again.");
-        setSaving(false);
-        return;
-      }
+      router.push("/dashboard");
+      router.refresh();
+      return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    const { error: insertError } = await supabase
+      .from("children")
+      .insert({ ...childFields, parent_id: user.id });
+    if (insertError) {
+      setError("Couldn't save — try again.");
+      setSaving(false);
+      return;
+    }
+
+    // First-time setup only — a returning parent editing their profile goes straight
+    // back to Home, no need to re-run the welcome story.
+    setSaving(false);
+    setJustCreated(true);
+  }
+
+  if (justCreated) {
+    return (
+      <WelcomeFlow
+        childName={form.name}
+        onDone={() => {
+          router.push("/dashboard");
+          router.refresh();
+        }}
+      />
+    );
   }
 
   return (
