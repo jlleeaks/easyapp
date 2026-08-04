@@ -113,7 +113,7 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
         <TopOffWithStory childName={child.name} books={books ?? []} librarySessions={sessions.filter((s) => s.source === "library")} />
         <GrowthMomentCard childName={child.name} />
       </div>

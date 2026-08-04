@@ -32,7 +32,7 @@ export function TonightActivityHero({
   if (!suggestion) {
     return (
       <div
-        className="rounded-3xl p-7"
+        className="rounded-3xl p-7 h-full"
         style={{ background: PALETTE.goldSoft, border: `1px solid ${PALETTE.goldLine}` }}
       >
         <p className="text-xs font-bold uppercase mb-1.5" style={{ color: PALETTE.gold, letterSpacing: "0.06em" }}>
@@ -59,10 +59,10 @@ export function TonightActivityHero({
 
   return (
     <div
-      className="relative overflow-hidden rounded-3xl grid grid-cols-1 md:grid-cols-[1fr_auto]"
+      className="relative overflow-hidden rounded-3xl grid grid-cols-1 md:grid-cols-[1fr_auto] h-full"
       style={{ background: meta.soft, border: `1px solid ${PALETTE.line}` }}
     >
-      <div className="p-7 md:p-8 min-w-0">
+      <div className="p-7 md:p-8 min-w-0 flex flex-col justify-center">
         <p className="text-xs font-bold uppercase mb-2" style={{ color: meta.color, letterSpacing: "0.06em" }}>
           Tonight&apos;s activity
         </p>
