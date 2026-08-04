@@ -7,6 +7,7 @@ import { PALETTE, RADIUS } from "@/lib/palette";
 import { PrimaryButton } from "@/components/ui/primitives";
 import { NumericProgressBar } from "@/components/ui/MilestoneProgressBar";
 import { thisWeekCounts } from "@/lib/streak";
+import type { SuggestedWeeklyGoals } from "@/lib/suggestions";
 import type { Session, WeeklyGoals } from "@/lib/types";
 
 const METRICS: {
@@ -76,11 +77,13 @@ export function WeeklyGoalsCard({
   childId,
   childName,
   weeklyGoals,
+  suggestedGoals,
   sessions,
 }: {
   childId: string;
   childName: string;
   weeklyGoals: WeeklyGoals | null;
+  suggestedGoals: SuggestedWeeklyGoals | null;
   sessions: Session[];
 }) {
   const router = useRouter();
@@ -91,20 +94,29 @@ export function WeeklyGoalsCard({
   const [suggesting, setSuggesting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showReason, setShowReason] = useState(false);
 
   const counts = thisWeekCounts(sessions);
 
+  // The parent hasn't saved their own goals yet — show Easy's personalized, roadmap-grounded
+  // default directly instead of an empty "set them yourself" form. It isn't persisted until
+  // they explicitly save (via Edit goals), so it can stay fresh as their data changes.
+  const isSuggested = !goals && !!suggestedGoals;
+  const effectiveGoals = goals ?? suggestedGoals;
+
   function startEditing() {
-    if (goals) {
+    const base = goals ?? suggestedGoals;
+    if (base) {
       setDraft({
-        read_together_target: goals.read_together_target,
-        practice_target: goals.practice_target,
-        homework_target: goals.homework_target,
-        focus_area: goals.focus_area ?? "",
+        read_together_target: base.read_together_target,
+        practice_target: base.practice_target,
+        homework_target: base.homework_target,
+        focus_area: goals?.focus_area ?? "",
       });
     }
     setSuggestReason(null);
     setError(null);
+    setShowReason(false);
     setEditing(true);
   }
 
@@ -178,7 +190,7 @@ export function WeeklyGoalsCard({
           className="btn-press flex items-center justify-center gap-1.5 text-xs font-bold py-2 mb-2 transition-all duration-150"
           style={{ borderRadius: RADIUS.sm, border: `1px solid ${PALETTE.brandLine}`, color: PALETTE.brand, background: PALETTE.brandSoft }}
         >
-          <Sparkles size={13} /> {suggesting ? "Thinking…" : "Suggest for me"}
+          <Sparkles size={13} /> {suggesting ? "Thinking…" : "Get a fresh suggestion"}
         </button>
         {suggestReason && (
           <p className="text-xs italic mb-2" style={{ color: PALETTE.inkSoft }}>
@@ -206,7 +218,7 @@ export function WeeklyGoalsCard({
     );
   }
 
-  if (!goals) {
+  if (!effectiveGoals) {
     return (
       <div className="rounded-3xl p-6 h-full flex flex-col" style={{ background: PALETTE.card, border: `1px solid ${PALETTE.line}` }}>
         <p className="text-xs font-bold uppercase mb-3" style={{ color: PALETTE.inkFaint, letterSpacing: "0.06em" }}>
@@ -232,7 +244,7 @@ export function WeeklyGoalsCard({
 
   return (
     <div className="rounded-3xl p-6 h-full flex flex-col" style={{ background: PALETTE.card, border: `1px solid ${PALETTE.line}` }}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-1">
         <p className="text-xs font-bold uppercase" style={{ color: PALETTE.inkFaint, letterSpacing: "0.06em" }}>
           This week
         </p>
@@ -240,12 +252,28 @@ export function WeeklyGoalsCard({
           Edit goals
         </button>
       </div>
-      <div className="flex flex-col gap-4 flex-1">
+      {isSuggested && (
+        <div className="mb-3">
+          <button
+            onClick={() => setShowReason((v) => !v)}
+            className="text-xs font-semibold underline"
+            style={{ color: PALETTE.inkFaint }}
+          >
+            Personalized for {childName} — Suggestions?
+          </button>
+          {showReason && (
+            <p className="text-xs italic mt-1" style={{ color: PALETTE.inkSoft }}>
+              {suggestedGoals!.reason}
+            </p>
+          )}
+        </div>
+      )}
+      <div className="flex flex-col gap-4 flex-1" style={{ marginTop: isSuggested ? 0 : 12 }}>
         {METRICS.map((m) => (
-          <GoalRow key={m.key} label={m.label} count={counts[m.source] ?? 0} target={goals[m.key]} />
+          <GoalRow key={m.key} label={m.label} count={counts[m.source] ?? 0} target={effectiveGoals[m.key]} />
         ))}
       </div>
-      {goals.focus_area && (
+      {goals?.focus_area && (
         <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${PALETTE.line}` }}>
           <p className="text-[10px] font-bold uppercase mb-0.5" style={{ color: PALETTE.inkFaint }}>
             Building toward this week

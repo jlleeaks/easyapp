@@ -9,7 +9,7 @@ import { TopOffWithStory } from "@/components/ui/TopOffWithStory";
 import { GrowthMomentCard } from "@/components/ui/GrowthMomentCard";
 import { BuildingTowardSection } from "@/components/ui/BuildingTowardSection";
 import { AskEasyMiniPrompt } from "@/components/ui/AskEasyMiniPrompt";
-import { getTonightSuggestions } from "@/lib/suggestions";
+import { deterministicWeeklyGoals, getSuggestedWeeklyGoals, getTonightSuggestions } from "@/lib/suggestions";
 import { areaForFocusText, computeRoadmap, deterministicFallbackSuggestion } from "@/lib/roadmap";
 import type { Book, ChildProfile, Session, Skill } from "@/lib/types";
 
@@ -65,6 +65,22 @@ export default async function DashboardPage() {
   }
   const suggestionArea = areaForFocusText(suggestion.subject, suggestion.focus);
 
+  // Weekly goals should be personalized by default, not an empty form the parent has to
+  // fill in first — grounded in the same roadmap coverage Progress shows, so targets track
+  // real ground left to cover before kindergarten ends. Only computed when the parent
+  // hasn't already saved their own goals.
+  let suggestedGoals = null;
+  if (!child.weekly_goals) {
+    try {
+      suggestedGoals = await getSuggestedWeeklyGoals(child, sessions, roadmap);
+    } catch {
+      suggestedGoals = null;
+    }
+    if (!suggestedGoals) {
+      suggestedGoals = deterministicWeeklyGoals(roadmap);
+    }
+  }
+
   return (
     <Shell wide>
       <div className="flex items-center justify-between mb-6 sm:hidden">
@@ -77,7 +93,13 @@ export default async function DashboardPage() {
         <div className="md:col-span-2">
           <TonightActivityHero childName={child.name} suggestion={suggestion} area={suggestionArea} />
         </div>
-        <WeeklyGoalsCard childId={child.id} childName={child.name} weeklyGoals={child.weekly_goals ?? null} sessions={sessions} />
+        <WeeklyGoalsCard
+          childId={child.id}
+          childName={child.name}
+          weeklyGoals={child.weekly_goals ?? null}
+          suggestedGoals={suggestedGoals}
+          sessions={sessions}
+        />
       </div>
 
       <div className="mt-4 flex flex-col gap-3">

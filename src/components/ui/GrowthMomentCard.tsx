@@ -101,8 +101,11 @@ export function GrowthMomentCard({ childName }: { childName: string }) {
           </p>
         ) : (
           <>
-            <p className="text-sm mb-2.5" style={{ color: PALETTE.inkSoft }}>
-              {moment.description(childName)}
+            <p className="text-sm mb-1" style={{ color: PALETTE.inkSoft }}>
+              {moment.activity(childName)}
+            </p>
+            <p className="text-xs italic mb-2.5" style={{ color: PALETTE.violetDeep }}>
+              {moment.benefit}
             </p>
             <div className="flex flex-wrap gap-2">
               <button

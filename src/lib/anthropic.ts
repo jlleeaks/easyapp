@@ -217,16 +217,23 @@ Respond with ONLY strict JSON, no markdown fences:
   ]
 }`;
 
-export const SUGGEST_WEEKLY_GOALS_SYSTEM = `You are the reasoning engine behind "Easy." A parent wants help setting sensible weekly targets for three things: reading together, practice activities (homework-helper or no-worksheet practice sessions), and completed homework check-ins. You'll be given the child's profile and, where available, their actual average weekly counts for each over recent weeks.
+export const SUGGEST_WEEKLY_GOALS_SYSTEM = `You are the reasoning engine behind "Easy." A parent wants a sensible, personalized set of weekly targets for three things: reading together, practice activities (homework-helper or no-worksheet practice sessions), and completed homework check-ins — generated automatically, not something the parent has to configure themselves.
 
-Suggest realistic, sustainable targets for a busy family with a kindergartner — not a maximal or aspirational number. If real recent-weeks averages are given, anchor close to them (matching current real behavior, maybe one notch higher only if there's room); if no history exists yet, suggest modest, well-established kindergarten-parenting defaults (reading together most days, a couple of practice sessions, homework as it's assigned). Never suggest a number that would feel punishing or unrealistic for a 5-6 year old and a working parent.
+The real purpose of these targets is to help the child actually reach kindergarten's end-of-year expectations, not just to match whatever pace the family already happens to be at. You'll be given the child's profile and, where available: their actual average weekly counts for each activity over recent weeks, AND a "roadmap" summary of how many of the 15 curated kindergarten learning areas (across math/writing/reading) are comfortable, developing, or not yet observed.
+
+Use the roadmap coverage to steer the targets, not just recent averages:
+- If a lot of areas are "not yet observed" this far into the year, lean toward a slightly higher practice/homework target — there's real ground left to cover before kindergarten ends — and say so honestly in the reason (e.g. "a few more areas still need a first look").
+- If most areas are already "comfortable" or "developing," modest maintenance-level targets are enough — don't manufacture urgency that isn't there.
+- Reading together should stay frequent regardless (reading volume matters at every stage), but can trend toward the higher end if reading-subject areas are lagging.
+
+Still keep every number realistic and sustainable for a busy family with a 5-6 year old — never maximal, punishing, or unrealistic. If real recent-weeks averages are given, don't ignore them: a target far above what the family already sustains will just feel like failure. Blend "what's realistic given recent behavior" with "what's still needed to hit kindergarten milestones," and make the reason reflect that blend in one honest sentence.
 
 Respond with ONLY strict JSON, no markdown fences:
 {
   "read_together_target": integer 1-7,
   "practice_target": integer 1-7,
   "homework_target": integer 0-7,
-  "reason": "1 short sentence explaining the suggested numbers, referencing real recent activity if given"
+  "reason": "1 short sentence explaining the suggested numbers, grounded in real roadmap coverage and/or recent activity"
 }`;
 
 export const ITERATION_SYSTEM = `You are the reasoning engine behind "Easy." A parent just finished a session with their kindergartner and reported back. Based on this specific feedback, write a short, honest, specific note back to the parent connecting what they reported to what will change next time — never vague ("we're personalizing!"), always concrete. Also update the running "what we've learned" summary for this child, and set the skill's status.

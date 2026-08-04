@@ -5,13 +5,14 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { DevelopmentalStageBar } from "@/components/ui/MilestoneProgressBar";
 import { SUBJECTS } from "@/lib/subjects";
 import { nextStepForSubject, type AreaRoadmap } from "@/lib/roadmap";
+import { suggestedMomentForCategory, type GrowthMoment } from "@/lib/growthMoments";
 import type { Briefing, Session } from "@/lib/types";
 
 const LIFE_SKILL_CATEGORIES = [
-  { key: "fine_motor_support", label: "Fine motor", icon: Hand } as const,
-  { key: "social_emotional_support", label: "Social-emotional", icon: Smile } as const,
-  { key: "independence_skill", label: "Independence", icon: Footprints } as const,
-];
+  { key: "fine_motor_support", label: "Fine motor", icon: Hand, momentCategory: "fine-motor" } as const,
+  { key: "social_emotional_support", label: "Social-emotional", icon: Smile, momentCategory: "social-emotional" } as const,
+  { key: "independence_skill", label: "Independence", icon: Footprints, momentCategory: "independence" } as const,
+] satisfies { key: keyof Briefing; label: string; icon: typeof Hand; momentCategory: GrowthMoment["category"] }[];
 
 /** Most recent session where Easy actually flagged this field — never a fabricated status. */
 function latestLifeSkillNote(sessions: Session[], field: keyof Briefing): { text: string; date: string } | null {
@@ -77,6 +78,7 @@ export function BuildingTowardSection({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-2">
         {LIFE_SKILL_CATEGORIES.map((cat) => {
           const note = latestLifeSkillNote(sessions, cat.key);
+          const suggestion = note ? null : suggestedMomentForCategory(cat.momentCategory);
           return (
             <div key={cat.key} className="rounded-2xl p-4" style={{ background: PALETTE.card, border: `1px solid ${PALETTE.line}` }}>
               <div className="flex items-center gap-1.5 mb-2">
@@ -89,6 +91,18 @@ export function BuildingTowardSection({
                 <p className="text-xs leading-snug" style={{ color: PALETTE.inkSoft }}>
                   {note.text.length > 110 ? note.text.slice(0, 107).trimEnd() + "…" : note.text}
                 </p>
+              ) : suggestion ? (
+                <>
+                  <p className="text-[10px] font-bold uppercase mb-1" style={{ color: PALETTE.inkFaint, letterSpacing: "0.04em" }}>
+                    Try this
+                  </p>
+                  <p className="text-xs leading-snug mb-1" style={{ color: PALETTE.inkSoft }}>
+                    {suggestion.activity(childName)}
+                  </p>
+                  <p className="text-xs italic" style={{ color: PALETTE.violetDeep }}>
+                    {suggestion.benefit}
+                  </p>
+                </>
               ) : (
                 <p className="text-xs font-semibold" style={{ color: PALETTE.inkFaint }}>
                   Not yet observed
