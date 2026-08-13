@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/ui/Shell";
 import { Wordmark } from "@/components/ui/primitives";
 import { HomeGreeting } from "@/components/ui/HomeGreeting";
+import { HomeRoadmapPulse } from "@/components/ui/HomeRoadmapPulse";
 import { TonightActivityHero } from "@/components/ui/TonightActivityCard";
 import { WeeklyGoalsCard } from "@/components/ui/WeeklyGoalsCard";
 import { OtherActivitiesCard } from "@/components/ui/OtherActivitiesCard";
@@ -96,6 +97,10 @@ export default async function DashboardPage() {
 
       <HomeGreeting parentName={parent?.name} childName={child.name} />
 
+      <div className="mb-4">
+        <HomeRoadmapPulse childName={child.name} roadmap={roadmap} />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-2">
           <TonightActivityHero childName={child.name} suggestion={suggestion} area={suggestionArea} sessions={sessions} />
@@ -119,7 +124,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-6">
-        <BuildingTowardSection childName={child.name} roadmap={roadmap} sessions={sessions} />
+        <BuildingTowardSection childName={child.name} sessions={sessions} />
       </div>
 
       <div className="mt-6">

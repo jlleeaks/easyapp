@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Camera, ChevronRight, ChevronLeft, Check, TrendingUp, Sparkles, PenLine, Save } from "lucide-react";
 import { PALETTE, RADIUS } from "@/lib/palette";
 import { SUBJECTS, GRADE_CONTEXT, subjectMeta } from "@/lib/subjects";
@@ -23,6 +24,7 @@ import { BriefingView } from "@/components/homework/BriefingView";
 import { AssignmentRecapView } from "@/components/homework/AssignmentRecapView";
 import { CompactBriefingView } from "@/components/homework/CompactBriefingView";
 import { BriefingSkeleton } from "@/components/homework/BriefingSkeleton";
+import { StateMarker } from "@/components/ui/StateMarker";
 import { matchAreaByText } from "@/lib/standards";
 import type { AreaRoadmap } from "@/lib/roadmap";
 import type { Briefing, CheckinAnswers, Session, Subject } from "@/lib/types";
@@ -626,6 +628,8 @@ export function HomeworkHub({
   }
 
   if (step === "iteration") {
+    const matchedArea = briefing ? matchAreaByText(subject, briefing.skill) : null;
+    const matchedItem = matchedArea ? (roadmap.find((r) => r.area.id === matchedArea.id) ?? null) : null;
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in-up max-w-[640px] mx-auto">
         <div
@@ -647,7 +651,29 @@ export function HomeworkHub({
         <Eyebrow color={PALETTE.brand}>
           <span className="mt-2 block">What&apos;s next</span>
         </Eyebrow>
-        <div className="text-base mb-8 px-2" style={{ color: PALETTE.inkSoft }}>{microMessage}</div>
+        <div className="text-base mb-4 px-2" style={{ color: PALETTE.inkSoft }}>{microMessage}</div>
+
+        {matchedItem && (
+          <Link
+            href="/progress"
+            className="w-full rounded-2xl p-4 mb-6 text-left flex items-center justify-between gap-3 transition-all duration-150 hover:-translate-y-0.5"
+            style={{ background: PALETTE.violetSoft, border: `1px solid ${PALETTE.violetLine}` }}
+          >
+            <div>
+              <p className="text-[10px] font-bold uppercase mb-1" style={{ color: PALETTE.violetDeep, letterSpacing: "0.06em" }}>
+                This moved {childName}&apos;s roadmap forward
+              </p>
+              <p className="text-sm font-bold mb-1" style={{ color: PALETTE.ink }}>
+                {matchedArea!.area}
+              </p>
+              <StateMarker state={matchedItem.state} />
+            </div>
+            <span className="text-xs font-bold underline flex-shrink-0" style={{ color: PALETTE.violetDeep }}>
+              View roadmap →
+            </span>
+          </Link>
+        )}
+
         <PrimaryButton onClick={() => setStep("subject-detail")}>Back to {meta.label}</PrimaryButton>
       </div>
     );

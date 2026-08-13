@@ -84,6 +84,21 @@ export function roadmapSummary(areas: AreaRoadmap[]) {
   };
 }
 
+/**
+ * Grounded in the actual summary counts, never generic cheerleading — matches the app's
+ * "no unearned praise" principle used everywhere else progress is shown. Shared between
+ * the full Roadmap page and Home's roadmap summary so the two can't say different things.
+ */
+export function roadmapEncouragingNote(childName: string, summary: ReturnType<typeof roadmapSummary>): string {
+  if (summary.comfortable > 0) {
+    return `${childName} has areas Easy has seen consistently — steady, ordinary practice is what got them there.`;
+  }
+  if (summary.developing > 0) {
+    return `${childName} is actively building ${summary.developing} area${summary.developing === 1 ? "" : "s"} right now — that's real progress, even before it looks "finished."`;
+  }
+  return `Every area here starts at "not yet observed" — that's the starting line, not a judgment. A few real activities is all it takes to start filling this in.`;
+}
+
 /** Not-yet-comfortable observed area with the most evidence, else the first not-yet-observed area. */
 export function nextStepForSubject(items: AreaRoadmap[]): AreaRoadmap | null {
   const observed = items.filter((a) => a.evidence.length > 0);

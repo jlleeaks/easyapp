@@ -2,9 +2,6 @@ import Link from "next/link";
 import { Hand, Smile, Footprints } from "lucide-react";
 import { PALETTE } from "@/lib/palette";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { DevelopmentalStageBar } from "@/components/ui/MilestoneProgressBar";
-import { SUBJECTS } from "@/lib/subjects";
-import { nextStepForSubject, type AreaRoadmap } from "@/lib/roadmap";
 import { suggestedMomentForCategory, type GrowthMoment } from "@/lib/growthMoments";
 import type { Briefing, Session } from "@/lib/types";
 
@@ -23,58 +20,20 @@ function latestLifeSkillNote(sessions: Session[], field: keyof Briefing): { text
   return null;
 }
 
-function GroupLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-[10px] font-bold uppercase mb-2" style={{ color: PALETTE.inkFaint, letterSpacing: "0.06em" }}>
-      {children}
-    </p>
-  );
-}
-
+// Academic (math/writing/reading) progress now lives in the roadmap summary at the top
+// of Home — this section stays scoped to the non-academic side so the two don't repeat
+// each other.
 export function BuildingTowardSection({
   childName,
-  roadmap,
   sessions,
 }: {
   childName: string;
-  roadmap: AreaRoadmap[];
   sessions: Session[];
 }) {
   return (
     <div>
-      <SectionHeading color={PALETTE.violetDeep}>What {childName} Is Building Toward</SectionHeading>
+      <SectionHeading color={PALETTE.violetDeep}>What {childName} Is Also Building Toward</SectionHeading>
 
-      <GroupLabel>School</GroupLabel>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-        {SUBJECTS.map((s) => {
-          const items = roadmap.filter((a) => a.area.subject === s.key);
-          const next = nextStepForSubject(items) ?? items[0];
-          if (!next) return null;
-          const hasEvidence = next.evidence.length > 0;
-          const statusLabel = !hasEvidence
-            ? "Starting point needed"
-            : next.state === "comfortable" || next.state === "ready_to_extend"
-              ? "Comfortable"
-              : "Developing";
-          return (
-            <div key={s.key} className="rounded-2xl p-4" style={{ background: PALETTE.card, border: `1px solid ${PALETTE.line}` }}>
-              <div className="flex items-center gap-1.5 mb-2">
-                <s.icon size={14} color={s.color} />
-                <p className="text-[11px] font-bold uppercase" style={{ color: s.color, letterSpacing: "0.04em" }}>
-                  {s.label}
-                </p>
-              </div>
-              <p className="text-sm font-bold mb-2 leading-snug">{next.area.area}</p>
-              <p className="text-xs font-semibold mb-2" style={{ color: hasEvidence ? PALETTE.inkSoft : PALETTE.inkFaint }}>
-                {statusLabel}
-              </p>
-              {hasEvidence && <DevelopmentalStageBar state={next.state} />}
-            </div>
-          );
-        })}
-      </div>
-
-      <GroupLabel>Social</GroupLabel>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-2">
         {LIFE_SKILL_CATEGORIES.map((cat) => {
           const note = latestLifeSkillNote(sessions, cat.key);

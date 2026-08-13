@@ -16,19 +16,39 @@ type Screen = {
   buttonLabel: string;
 };
 
-function buildScreens(childName: string): Screen[] {
+function buildScreens(childName: string, parentName: string): Screen[] {
   return [
     {
       icon: (p) => <DoodleHeart {...p} />,
       color: PALETTE.accent,
       soft: PALETTE.accentSoft,
       eyebrow: "Welcome",
-      heading: "You're all set up!",
+      heading: `Hey ${parentName || "there"}! Thanks for choosing Easy 🤍`,
       body: (
-        <>
-          Thank you for choosing us! We&apos;re looking forward to making teaching, mentoring, and guiding {childName}
-          {" "}<em>easy</em>.
-        </>
+        <div className="flex flex-col gap-2.5 text-left">
+          <p>We&apos;re excited to help you help {childName} meet their education goals.</p>
+          <p className="font-bold mt-1" style={{ color: PALETTE.ink }}>
+            Here&apos;s what we&apos;ll help you do:
+          </p>
+          <p>
+            <strong>Teach</strong> school concepts
+            <br />
+            <strong>Coach</strong> social confidence
+            <br />
+            <strong>Mentor</strong> critical thinking
+          </p>
+          <p className="font-bold mt-1" style={{ color: PALETTE.ink }}>
+            And here&apos;s how:
+          </p>
+          <p>
+            <strong>Track</strong> how {childName} actually learns
+            <br />
+            <strong>Lay out</strong> a clear plan
+            <br />
+            <strong>Personalize</strong> every lesson, and more
+          </p>
+          <p className="mt-1">We&apos;re here to make learning, and growing, Easy(er), for you both.</p>
+        </div>
       ),
       buttonLabel: "Continue",
     },
@@ -37,20 +57,23 @@ function buildScreens(childName: string): Screen[] {
       color: PALETTE.brand,
       soft: PALETTE.brandSoft,
       eyebrow: "What Easy helps with",
-      heading: `Everything ${childName} needs, in one place`,
+      heading: `${childName}'s learning roadmap, from day one`,
       body: (
         <div className="flex flex-col gap-2.5 text-left">
           <p>
-            <strong>Tonight&apos;s activity</strong> — a short, tailored lesson picked for {childName}, every night.
+            <strong>A learning roadmap</strong> — a real, ongoing picture of where {childName} stands against
+            kindergarten milestones, right from today.
           </p>
           <p>
-            <strong>Homework help</strong> — snap a photo of any worksheet for an instant parent-coaching briefing.
+            <strong>Tonight&apos;s activity</strong> — a short, tailored lesson that moves the roadmap forward,
+            every night.
+          </p>
+          <p>
+            <strong>Homework help</strong> — snap a photo of any worksheet for an instant parent-coaching briefing
+            that logs straight to the roadmap.
           </p>
           <p>
             <strong>Reading together</strong> — bedtime story guides for books {childName} already owns.
-          </p>
-          <p>
-            <strong>A learning roadmap</strong> — a clear picture of kindergarten and where {childName} stands.
           </p>
         </div>
       ),
@@ -64,7 +87,7 @@ function buildScreens(childName: string): Screen[] {
       heading: "Your day-to-day",
       body: (
         <div className="flex flex-col gap-2.5 text-left">
-          <p>Check Home each day for tonight&apos;s pick, or choose your own activity.</p>
+          <p>Check {childName}&apos;s roadmap and Home each day for tonight&apos;s pick, or choose your own activity.</p>
           <p>After homework or reading, do a 30-second check-in — that&apos;s what makes Easy sharper over time.</p>
           <p>Stuck or unsure? Ask Easy anything, anytime.</p>
         </div>
@@ -84,14 +107,14 @@ function buildScreens(childName: string): Screen[] {
           this with you.
         </>
       ),
-      buttonLabel: "Let's begin!",
+      buttonLabel: `See ${childName}'s roadmap`,
     },
   ];
 }
 
-export function WelcomeFlow({ childName, onDone }: { childName: string; onDone: () => void }) {
+export function WelcomeFlow({ childName, parentName, onDone }: { childName: string; parentName: string; onDone: () => void }) {
   const [index, setIndex] = useState(0);
-  const screens = buildScreens(childName);
+  const screens = buildScreens(childName, parentName);
   const screen = screens[index];
   const isLast = index === screens.length - 1;
 

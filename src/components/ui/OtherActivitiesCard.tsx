@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { PALETTE } from "@/lib/palette";
 import { NumericProgressBar } from "@/components/ui/MilestoneProgressBar";
 import { subjectMeta } from "@/lib/subjects";
@@ -38,6 +40,7 @@ function OtherActivityRow({ activity, count, onStart }: { activity: OtherActivit
 
 export function OtherActivitiesCard({ activities, sessions }: { activities: OtherActivity[]; sessions: Session[] }) {
   const router = useRouter();
+  const [expanded, setExpanded] = useState(false);
 
   function start(activity: OtherActivity) {
     const params = new URLSearchParams({ subject: activity.subject, topic: activity.focus, reason: activity.reason });
@@ -48,19 +51,30 @@ export function OtherActivitiesCard({ activities, sessions }: { activities: Othe
 
   return (
     <div className="rounded-3xl p-6 h-full flex flex-col" style={{ background: PALETTE.card, border: `1px solid ${PALETTE.line}` }}>
-      <p className="text-xs font-bold uppercase mb-3" style={{ color: PALETTE.inkFaint, letterSpacing: "0.06em" }}>
-        Rather not do tonight&apos;s pick?
-      </p>
-      <div className="flex flex-col gap-3 flex-1">
-        {activities.map((a) => (
-          <OtherActivityRow
-            key={`${a.subject}-${a.focus}`}
-            activity={a}
-            count={thisWeekCountBySubject(sessions, a.subject)}
-            onStart={() => start(a)}
-          />
-        ))}
-      </div>
+      <button onClick={() => setExpanded((v) => !v)} className="w-full flex items-center justify-between gap-2 text-left flex-shrink-0" aria-expanded={expanded}>
+        <p className="text-xs font-bold uppercase" style={{ color: PALETTE.inkFaint, letterSpacing: "0.06em" }}>
+          Rather not do tonight&apos;s pick?
+        </p>
+        {expanded ? <ChevronDown size={15} color={PALETTE.inkFaint} /> : <ChevronRight size={15} color={PALETTE.inkFaint} />}
+      </button>
+      {!expanded ? (
+        <div className="flex-1 flex items-center">
+          <p className="text-sm" style={{ color: PALETTE.inkSoft }}>
+            {activities.length} other option{activities.length === 1 ? "" : "s"} across math, writing, and reading — tap above to see them.
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3 flex-1 mt-3">
+          {activities.map((a) => (
+            <OtherActivityRow
+              key={`${a.subject}-${a.focus}`}
+              activity={a}
+              count={thisWeekCountBySubject(sessions, a.subject)}
+              onStart={() => start(a)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

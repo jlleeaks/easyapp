@@ -116,8 +116,12 @@ export function OnboardingWizard({
     return (
       <WelcomeFlow
         childName={form.name}
+        parentName={form.parentName}
         onDone={() => {
-          router.push("/dashboard");
+          // Land on the Roadmap first, not Home — the roadmap is real and viewable
+          // immediately (honest "not yet observed" milestones included), so that's the
+          // instant payoff a parent gets before ever uploading a worksheet.
+          router.push("/progress");
           router.refresh();
         }}
       />

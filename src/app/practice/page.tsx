@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/ui/Shell";
 import { PracticeFlow } from "@/components/homework/PracticeFlow";
-import type { ChildProfile } from "@/lib/types";
+import { computeRoadmap } from "@/lib/roadmap";
+import type { ChildProfile, Session, Skill } from "@/lib/types";
 
 export default async function PracticePage({
   searchParams,
@@ -25,9 +26,27 @@ export default async function PracticePage({
 
   const { subject, topic, reason } = await searchParams;
 
+  const [{ data: sessions }, { data: skills }] = await Promise.all([
+    supabase.from("sessions").select("*").eq("child_id", child.id).returns<Session[]>(),
+    supabase.from("skills").select("*").eq("child_id", child.id).returns<Skill[]>(),
+  ]);
+  const roadmap = computeRoadmap({
+    skills: skills ?? [],
+    sessions: sessions ?? [],
+    strengths: child.strengths ?? [],
+    growthAreas: child.growth_areas ?? [],
+  });
+
   return (
     <Shell>
-      <PracticeFlow childId={child.id} childName={child.name} initialSubject={subject} initialTopic={topic} initialReason={reason} />
+      <PracticeFlow
+        childId={child.id}
+        childName={child.name}
+        roadmap={roadmap}
+        initialSubject={subject}
+        initialTopic={topic}
+        initialReason={reason}
+      />
     </Shell>
   );
 }

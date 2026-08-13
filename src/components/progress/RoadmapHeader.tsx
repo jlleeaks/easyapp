@@ -4,19 +4,7 @@ import { useState } from "react";
 import { Info, Sparkles } from "lucide-react";
 import { PALETTE } from "@/lib/palette";
 import { STANDARDS_FRAMEWORK } from "@/lib/standards";
-import { roadmapSummary, type AreaRoadmap } from "@/lib/roadmap";
-
-// Grounded in the actual summary counts, never generic cheerleading — matches the
-// app's "no unearned praise" principle used everywhere else progress is shown.
-function encouragingNote(childName: string, summary: ReturnType<typeof roadmapSummary>): string {
-  if (summary.comfortable > 0) {
-    return `${childName} has areas Easy has seen consistently — steady, ordinary practice is what got them there.`;
-  }
-  if (summary.developing > 0) {
-    return `${childName} is actively building ${summary.developing} area${summary.developing === 1 ? "" : "s"} right now — that's real progress, even before it looks "finished."`;
-  }
-  return `Every area here starts at "not yet observed" — that's the starting line, not a judgment. A few real activities is all it takes to start filling this in.`;
-}
+import { roadmapSummary, roadmapEncouragingNote, type AreaRoadmap } from "@/lib/roadmap";
 
 export function RoadmapHeader({ childName, roadmap }: { childName: string; roadmap: AreaRoadmap[] }) {
   const [showInfo, setShowInfo] = useState(false);
@@ -61,7 +49,7 @@ export function RoadmapHeader({ childName, roadmap }: { childName: string; roadm
         <div className="flex items-start gap-2 mt-3 pt-3" style={{ borderTop: `1px solid ${PALETTE.line}` }}>
           <Sparkles size={14} color={PALETTE.brand} className="flex-shrink-0 mt-0.5" />
           <p className="text-sm italic" style={{ color: PALETTE.ink }}>
-            {encouragingNote(childName, summary)}
+            {roadmapEncouragingNote(childName, summary)}
           </p>
         </div>
         {showInfo && (

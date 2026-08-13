@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Sparkles, TrendingUp, Check, ChevronRight } from "lucide-react";
 import { PALETTE, RADIUS } from "@/lib/palette";
 import { SUBJECTS, subjectMeta } from "@/lib/subjects";
@@ -17,6 +18,9 @@ import {
 import { BriefingView } from "@/components/homework/BriefingView";
 import { CompactBriefingView } from "@/components/homework/CompactBriefingView";
 import { BriefingSkeleton } from "@/components/homework/BriefingSkeleton";
+import { StateMarker } from "@/components/ui/StateMarker";
+import { matchAreaByText } from "@/lib/standards";
+import type { AreaRoadmap } from "@/lib/roadmap";
 import type { Briefing, CheckinAnswers, Subject } from "@/lib/types";
 
 type Step = "loading-suggestions" | "picker" | "generating" | "briefing" | "delivering" | "checkin" | "submitting" | "iteration";
@@ -35,12 +39,14 @@ const EXECUTION_DIFFICULTY_OPTIONS = ["frustration", "low confidence", "attentio
 export function PracticeFlow({
   childId,
   childName,
+  roadmap,
   initialSubject,
   initialTopic,
   initialReason,
 }: {
   childId: string;
   childName: string;
+  roadmap: AreaRoadmap[];
   initialSubject?: string;
   initialTopic?: string;
   initialReason?: string;
@@ -144,6 +150,9 @@ export function PracticeFlow({
       }
       setMicroMessage(data.microMessage);
       setStep("iteration");
+      // Refetch server data so the "moved the roadmap forward" state on the next screen
+      // reflects tonight's session, not the roadmap as it stood when this page first loaded.
+      router.refresh();
     } catch {
       setError("Couldn't process that check-in — check your connection and try again.");
       setStep("checkin");
@@ -334,6 +343,8 @@ export function PracticeFlow({
   }
 
   if (step === "iteration") {
+    const matchedArea = matchAreaByText(subject, briefing?.skill ?? focus);
+    const matchedItem = matchedArea ? (roadmap.find((r) => r.area.id === matchedArea.id) ?? null) : null;
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in-up">
         <div
@@ -355,7 +366,29 @@ export function PracticeFlow({
         <Eyebrow color={PALETTE.brand}>
           <span className="mt-2 block">What&apos;s next</span>
         </Eyebrow>
-        <div className="text-base mb-8 px-2" style={{ color: PALETTE.inkSoft }}>{microMessage}</div>
+        <div className="text-base mb-4 px-2" style={{ color: PALETTE.inkSoft }}>{microMessage}</div>
+
+        {matchedItem && (
+          <Link
+            href="/progress"
+            className="w-full max-w-[560px] rounded-2xl p-4 mb-6 text-left flex items-center justify-between gap-3 transition-all duration-150 hover:-translate-y-0.5"
+            style={{ background: PALETTE.violetSoft, border: `1px solid ${PALETTE.violetLine}` }}
+          >
+            <div>
+              <p className="text-[10px] font-bold uppercase mb-1" style={{ color: PALETTE.violetDeep, letterSpacing: "0.06em" }}>
+                This moved {childName}&apos;s roadmap forward
+              </p>
+              <p className="text-sm font-bold mb-1" style={{ color: PALETTE.ink }}>
+                {matchedArea!.area}
+              </p>
+              <StateMarker state={matchedItem.state} />
+            </div>
+            <span className="text-xs font-bold underline flex-shrink-0" style={{ color: PALETTE.violetDeep }}>
+              View roadmap →
+            </span>
+          </Link>
+        )}
+
         <PrimaryButton
           onClick={() => {
             router.push("/dashboard");

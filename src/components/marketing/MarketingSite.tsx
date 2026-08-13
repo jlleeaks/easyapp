@@ -38,7 +38,6 @@ export function MarketingSite() {
       <HowItWorks />
       <WhatsIncluded />
       <Research />
-      <FounderProof />
       <FinalCta />
       <Footer />
     </div>
@@ -422,39 +421,6 @@ function Research() {
               </p>
               <p className="text-sm" style={{ color: M.inkSoft, lineHeight: 1.55 }}>
                 {r.body}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FounderProof() {
-  return (
-    <section className="px-6 sm:px-8 py-16 sm:py-20" style={{ background: M.creamDeep }}>
-      <div className="max-w-[820px] mx-auto text-center">
-        <Pill>Already tested at scale</Pill>
-        <h2 className="font-fraunces mt-4 mb-5" style={{ fontSize: "clamp(26px, 3.6vw, 34px)", fontWeight: 600 }}>
-          This isn&apos;t a technology bet with research cited after the fact.
-        </h2>
-        <p className="text-base mb-9 max-w-[58ch] mx-auto" style={{ color: M.inkSoft, lineHeight: 1.6 }}>
-          The parent-mediated model behind Easy was already run once, at real scale, under bad conditions —
-          before AI was ever the mechanism.
-        </p>
-        <div className="flex items-center justify-center gap-8 sm:gap-14 flex-wrap">
-          {[
-            ["20,000+", "kids reached"],
-            ["20+", "schools"],
-            ["2.5 yrs", "as founder & ops lead"],
-          ].map(([stat, label]) => (
-            <div key={label} className="text-center">
-              <p className="font-fraunces" style={{ fontSize: 34, fontWeight: 600, color: PALETTE.brand }}>
-                {stat}
-              </p>
-              <p className="text-xs font-semibold uppercase mt-1" style={{ color: M.inkFaint, letterSpacing: "0.04em" }}>
-                {label}
               </p>
             </div>
           ))}
