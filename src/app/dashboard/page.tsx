@@ -1,135 +1,63 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/ui/Shell";
-import { Wordmark } from "@/components/ui/primitives";
-import { HomeGreeting } from "@/components/ui/HomeGreeting";
-import { HomeRoadmapPulse } from "@/components/ui/HomeRoadmapPulse";
-import { TonightActivityHero } from "@/components/ui/TonightActivityCard";
-import { WeeklyGoalsCard } from "@/components/ui/WeeklyGoalsCard";
-import { OtherActivitiesCard } from "@/components/ui/OtherActivitiesCard";
-import { TopOffWithStory } from "@/components/ui/TopOffWithStory";
-import { GrowthMomentCard } from "@/components/ui/GrowthMomentCard";
-import { BuildingTowardSection } from "@/components/ui/BuildingTowardSection";
-import { AskEasyMiniPrompt } from "@/components/ui/AskEasyMiniPrompt";
-import { deterministicWeeklyGoals, getSuggestedWeeklyGoals, getTonightSuggestions } from "@/lib/suggestions";
-import { areaForFocusText, computeRoadmap, deterministicFallbackSuggestion, otherActivitiesForWeek } from "@/lib/roadmap";
-import type { Book, ChildProfile, Session, Skill } from "@/lib/types";
-
+import { RoadmapHome } from "@/components/easy/RoadmapHome";
+import { computeRoadmap } from "@/lib/roadmap";
+import type { ChildProfile, Session, Skill } from "@/lib/types";
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-
-  const { data: child } = await supabase
+  const { data: child, error: childError } = await supabase
     .from("children")
     .select("*")
     .eq("parent_id", user.id)
     .limit(1)
     .maybeSingle<ChildProfile>();
+  if (childError)
+    throw new Error("We couldn’t load your profile. Please try again.");
   if (!child) redirect("/onboarding");
-
-  const { data: parent } = await supabase
-    .from("parents")
-    .select("name")
-    .eq("id", user.id)
-    .maybeSingle<{ name: string | null }>();
-
-  const [{ data: allSessions }, { data: skills }, { data: books }] = await Promise.all([
-    supabase.from("sessions").select("*").eq("child_id", child.id).order("created_at", { ascending: false }).returns<Session[]>(),
-    supabase.from("skills").select("*").eq("child_id", child.id).returns<Skill[]>(),
-    supabase.from("books").select("*").eq("child_id", child.id).order("created_at", { ascending: false }).returns<Book[]>(),
+  const [parentResult, sessionsResult, skillsResult] = await Promise.all([
+    supabase
+      .from("parents")
+      .select("name")
+      .eq("id", user.id)
+      .maybeSingle<{ name: string | null }>(),
+    supabase
+      .from("sessions")
+      .select("*")
+      .eq("child_id", child.id)
+      .order("created_at", { ascending: false })
+      .returns<Session[]>(),
+    supabase
+      .from("skills")
+      .select("*")
+      .eq("child_id", child.id)
+      .returns<Skill[]>(),
   ]);
-  const sessions = allSessions ?? [];
-
+  if (sessionsResult.error || skillsResult.error)
+    throw new Error("We couldn’t load your roadmap. Please try again.");
+  const sessions = sessionsResult.data ?? [];
   const roadmap = computeRoadmap({
-    skills: skills ?? [],
+    skills: skillsResult.data ?? [],
     sessions,
     strengths: child.strengths ?? [],
     growthAreas: child.growth_areas ?? [],
-  });
-
-  // Resolve tonight's suggestion server-side (no client loading delay) and ground
-  // its "why" against the same roadmap state Progress shows, so the two can't disagree.
-  // Easy should suggest something no matter what — if the AI call fails or times out,
-  // fall back to a deterministic, roadmap-grounded pick (optionally steered by the
-  // parent's own stated weekly focus) rather than showing an empty state.
-  let suggestion = null;
-  try {
-    const suggestions = await getTonightSuggestions(child, skills ?? [], sessions);
-    suggestion = suggestions?.[0] ?? null;
-  } catch {
-    suggestion = null;
-  }
-  if (!suggestion) {
-    suggestion = deterministicFallbackSuggestion(roadmap, child.weekly_goals?.focus_area);
-  }
-  const suggestionArea = areaForFocusText(suggestion.subject, suggestion.focus);
-
-  // A parent who'd rather not do tonight's pick should see concrete, tailored alternatives —
-  // always exactly one pick per subject (including tonight's own subject, excluding tonight's
-  // exact area), so this stays predictable regardless of whether the AI call succeeded.
-  const otherRaw = otherActivitiesForWeek(roadmap, suggestion.subject, suggestionArea?.id);
-  const otherActivities = otherRaw.map((a) => ({ ...a, area: areaForFocusText(a.subject, a.focus) }));
-
-  // Weekly goals should be personalized by default, not an empty form the parent has to
-  // fill in first — grounded in the same roadmap coverage Progress shows, so targets track
-  // real ground left to cover before kindergarten ends. Only computed when the parent
-  // hasn't already saved their own goals.
-  let suggestedGoals = null;
-  if (!child.weekly_goals) {
-    try {
-      suggestedGoals = await getSuggestedWeeklyGoals(child, sessions, roadmap);
-    } catch {
-      suggestedGoals = null;
-    }
-    if (!suggestedGoals) {
-      suggestedGoals = deterministicWeeklyGoals(roadmap);
-    }
-  }
-
+  }).filter((r) => r.area.subject !== "writing");
   return (
     <Shell wide>
-      <div className="flex items-center justify-between mb-6 sm:hidden">
-        <Wordmark small />
-      </div>
-
-      <HomeGreeting parentName={parent?.name} childName={child.name} />
-
-      <div className="mb-4">
-        <HomeRoadmapPulse childName={child.name} roadmap={roadmap} />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-2">
-          <TonightActivityHero childName={child.name} suggestion={suggestion} area={suggestionArea} sessions={sessions} />
-        </div>
-        <OtherActivitiesCard activities={otherActivities} sessions={sessions} />
-      </div>
-
-      <div className="mt-4">
-        <WeeklyGoalsCard
-          childId={child.id}
-          childName={child.name}
-          weeklyGoals={child.weekly_goals ?? null}
-          suggestedGoals={suggestedGoals}
-          sessions={sessions}
-        />
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-        <TopOffWithStory childName={child.name} books={books ?? []} librarySessions={sessions.filter((s) => s.source === "library")} />
-        <GrowthMomentCard childName={child.name} />
-      </div>
-
-      <div className="mt-6">
-        <BuildingTowardSection childName={child.name} sessions={sessions} />
-      </div>
-
-      <div className="mt-6">
-        <AskEasyMiniPrompt childName={child.name} />
-      </div>
+      <RoadmapHome
+        childName={child.name}
+        parentName={parentResult.data?.name}
+        interests={child.interests}
+        summary={child.summary}
+        roadmap={roadmap}
+        latestMessage={
+          sessions.find((s) => s.checkin && s.micro_message)?.micro_message
+        }
+      />
     </Shell>
   );
 }

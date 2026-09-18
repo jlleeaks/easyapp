@@ -37,40 +37,7 @@ export function AiMarkdown({
 }
 
 export function Wordmark({ small }: { small?: boolean }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div
-        style={{
-          width: small ? 24 : 30,
-          height: small ? 24 : 30,
-          borderRadius: RADIUS.sm - 2,
-          background: `linear-gradient(150deg, #4A6152, ${PALETTE.brand})`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <svg viewBox="0 0 24 24" fill="none" width={small ? 12 : 15} height={small ? 12 : 15}>
-          <path
-            d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"
-            fill="#fff"
-          />
-        </svg>
-      </div>
-      <span
-        className="font-serif-display"
-        style={{
-          fontSize: small ? 16 : 19,
-          fontWeight: 700,
-          color: PALETTE.ink,
-          letterSpacing: "-0.01em",
-        }}
-      >
-        Easy
-      </span>
-    </div>
-  );
+  return <span className="easy-brand" style={{ fontSize: small ? 27 : 34 }}><span className="brand-mark" aria-hidden="true">e</span>easy<span className="brand-dot">.</span></span>;
 }
 
 export function Eyebrow({ children, color }: { children: React.ReactNode; color?: string }) {

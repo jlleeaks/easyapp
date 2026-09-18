@@ -163,7 +163,7 @@ export function ChatScreen({
       {messages.length === 0 && (
         <div className="mb-5 flex-shrink-0">
           <p className="text-sm mb-3" style={{ color: PALETTE.inkSoft }}>
-            This never reaches {childName || "your kid"}
+            Guidance for you as you help {childName || "your child"}
             {" "}&mdash; it&apos;s just for you. If it&apos;s worth acting on, Easy will point you to
             the right place.
           </p>

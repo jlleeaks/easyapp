@@ -160,7 +160,7 @@ const CORE_BRIEFING_FIELDS = `  "skill": "short name of the specific skill",
   "fine_motor_support": "ONLY when physical hand control genuinely affects this activity (pencil grip, cutting, sorting small objects, manipulating counters, arranging cards) — a short, specific note on that angle, e.g. 'if the pencil grip tires her out, let her trace every other letter'. Empty string if fine motor isn't really a factor here — do not force this in for every activity.",
   "social_emotional_support": "ONLY if this specific activity naturally surfaces a social-emotional skill (managing frustration, waiting for a turn, asking for help) beyond generic encouragement — a short, specific note. Empty string otherwise.",
   "independence_skill": "ONLY if this activity naturally connects to a real independence skill worth letting the child practice (making a choice, explaining what they need, doing a step alone) — a short note. Empty string otherwise.",
-  "estimated_minutes": "a realistic short range for a kindergartner, e.g. '8-10 min'",
+  "estimated_minutes": "a realistic short range for a kindergartner, e.g. '15-20 min'",
   "math_anxiety_note": "only include a supportive, confidence-building note here if the parent flagged this subject as stressful for them; otherwise empty string"`;
 
 const BRIEFING_SHAPE = `{\n${CORE_BRIEFING_FIELDS}\n}`;
@@ -299,7 +299,7 @@ Respond with ONLY strict JSON, no markdown fences, no preamble:
   "what_it_teaches": "2-3 sentences on the real theme/lesson this book carries, not just a plot summary",
   "discussion_questions": ["3 short PEER/CROWD-style questions, personalized using the child's interests/temperament where it fits"],
   "read_aloud_tip": "one short, concrete tip for reading it aloud with this specific child",
-  "estimated_minutes": "a realistic short range for reading plus discussion with a kindergartner, e.g. '10-12 min'",
+  "estimated_minutes": "a realistic short range for reading plus discussion with a kindergartner, e.g. '15-20 min'",
   "real_life_practice": "one short, concrete real-life way to practice a theme from this specific book — empty string if nothing genuinely fits"
 }`;
 

@@ -45,3 +45,7 @@ next-env.d.ts
 /extracted/
 /files.zip
 .claude/settings.local.json
+
+# Browser verification output
+/test-results/
+/playwright-report/
