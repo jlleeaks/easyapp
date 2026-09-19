@@ -8,7 +8,7 @@ import { Wordmark } from "@/components/ui/primitives";
 import { createClient } from "@/lib/supabase/client";
 
 const TABS = [
-  { href: "/dashboard", label: "Home", icon: HomeIcon },
+  { href: "/dashboard", label: "Roadmap", icon: HomeIcon },
   { href: "/homework", label: "Homework", icon: Camera },
   { href: "/library", label: "Library", icon: BookOpen },
   { href: "/chat", label: "Ask Easy", icon: Sparkles },
@@ -43,7 +43,7 @@ export function Shell({
     <div style={{ background: PALETTE.bg }} className="w-full flex min-w-0 sm:h-screen">
       {showNav && <Sidebar />}
       <div
-        className="dot-grain flex-1 min-w-0 flex justify-center px-6 py-10 pb-28 sm:px-8 sm:py-10 sm:pb-10 sm:h-screen sm:overflow-y-auto"
+        className="flex-1 min-w-0 flex justify-center px-6 py-10 pb-28 sm:px-8 sm:py-10 sm:pb-10 sm:h-screen sm:overflow-y-auto"
         style={{ color: PALETTE.ink }}
       >
         <div className="w-full min-w-0" style={{ maxWidth: wide ? 1240 : 720 }}>
@@ -83,7 +83,8 @@ function Sidebar() {
               <Link
                 key={t.href}
                 href={t.href}
-                className="relative flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors duration-150"
+                aria-current={active ? "page" : undefined}
+                className="relative min-h-11 flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors duration-150"
                 style={{ color: active ? PALETTE.accent : PALETTE.inkSoft }}
               >
                 <span className="contents">
@@ -140,7 +141,8 @@ function MobileNav() {
           <Link
             key={t.href}
             href={t.href}
-            className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 transition-colors duration-150"
+            aria-current={active ? "page" : undefined}
+            className="flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2.5 transition-colors duration-150"
           >
             <span className="contents">
               <Icon size={18} color={active ? PALETTE.accent : PALETTE.inkSoft} />

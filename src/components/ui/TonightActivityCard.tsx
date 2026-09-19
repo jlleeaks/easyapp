@@ -74,7 +74,7 @@ export function TonightActivityHero({
             {meta.label}
           </span>
           <span className="flex items-center gap-1">
-            <Clock size={11} /> 5-10 min
+            <Clock size={11} /> 15-20 min
           </span>
           <span>No printing needed</span>
           <span style={{ color: meta.color, fontWeight: 700 }}>

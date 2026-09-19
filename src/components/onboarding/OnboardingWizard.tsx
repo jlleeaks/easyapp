@@ -1,25 +1,164 @@
 "use client";
-
-import { useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Check } from "lucide-react";
-import { PALETTE } from "@/lib/palette";
-import { Card, TextField, ChoiceGroup, PrimaryButton, SecondaryButton } from "@/components/ui/primitives";
+import { ArrowLeft, ArrowRight, Check, Leaf, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { WelcomeFlow } from "@/components/onboarding/WelcomeFlow";
-import { EMPTY_CHILD_PROFILE, type ChildProfile, type ChildProfileInput } from "@/lib/types";
-
-const STEPS = ["identity", "temperament", "academic", "reading", "signal"] as const;
-const STEP_TITLES: Record<(typeof STEPS)[number], string> = {
-  identity: "Let's get set up",
-  temperament: "How they handle hard stuff",
-  academic: "Where they're starting from",
-  reading: "Reading & routine",
-  signal: "What already works",
-};
-
+import {
+  EMPTY_CHILD_PROFILE,
+  type ChildProfile,
+  type ChildProfileInput,
+} from "@/lib/types";
+import { Brand } from "@/components/easy/Brand";
+import { TrailGuide } from "@/components/easy/TrailGuide";
 type FormState = ChildProfileInput & { parentName: string };
-
+type Question = {
+  key: keyof FormState;
+  group: string;
+  title: string;
+  hint: string;
+  options?: string[];
+  placeholder?: string;
+  optional?: boolean;
+};
+const QUESTIONS: Question[] = [
+  {
+    key: "parentName",
+    group: "A LITTLE INTRODUCTION",
+    title: "First, what should we call you?",
+    hint: "This is your space. Easy is here to help you teach.",
+    placeholder: "Your first name",
+  },
+  {
+    key: "name",
+    group: "YOUR LITTLE LEARNER",
+    title: "And your child’s name?",
+    hint: "A first name or nickname is all we need.",
+    placeholder: "Their name or nickname",
+  },
+  {
+    key: "interests",
+    group: "THEIR WORLD",
+    title: "What lights up their world?",
+    hint: "Dinosaurs? Space? A very specific kind of truck? Start with what they love.",
+    placeholder: "A few of their favorite things",
+  },
+  {
+    key: "hobbies",
+    group: "THEIR WORLD",
+    title: "What do they love doing?",
+    hint: "Think of those activities they could happily do all afternoon.",
+    placeholder: "Building, drawing, exploring…",
+    optional: true,
+  },
+  {
+    key: "frustration",
+    group: "HOW YOU HELP",
+    title: "When something feels hard, they…",
+    hint: "There’s no right answer. This helps us suggest a gentler way in.",
+    options: ["Keep trying", "Get frustrated fast", "Go quiet or shut down"],
+  },
+  {
+    key: "learning_style",
+    group: "HOW YOU HELP",
+    title: "What helps them get into it?",
+    hint: "Choose what seems to work best right now.",
+    options: [
+      "Moving and using objects",
+      "Sitting together and focusing",
+      "A little of both",
+    ],
+  },
+  {
+    key: "motivation",
+    group: "HOW YOU HELP",
+    title: "What keeps them going?",
+    hint: "We’ll help you encourage their effort along the way.",
+    options: [
+      "Noticing their effort",
+      "A playful challenge",
+      "Doing it together",
+    ],
+  },
+  {
+    key: "letters_level",
+    group: "A STARTING POINT",
+    title: "Where are they with letters and sounds?",
+    hint: "Your best impression is enough. The roadmap starts with plenty still to discover.",
+    options: [
+      "Just starting",
+      "Recognizing many letters",
+      "Starting to blend sounds",
+      "I’m not sure yet",
+    ],
+  },
+  {
+    key: "numbers_level",
+    group: "A STARTING POINT",
+    title: "And with numbers?",
+    hint: "Think about what you’ve noticed at home.",
+    options: [
+      "Exploring counting",
+      "Recognizing numbers",
+      "Trying simple addition",
+      "I’m not sure yet",
+    ],
+  },
+  {
+    key: "read_together",
+    group: "YOUR READING LIFE",
+    title: "Do you read together?",
+    hint: "We’ll meet you where you are.",
+    options: ["Most evenings", "Sometimes", "We’d like to start"],
+  },
+  {
+    key: "favorite_books",
+    group: "YOUR READING LIFE",
+    title: "Any books they ask for again and again?",
+    hint: "We can build on the books you already have.",
+    placeholder: "A book title or two",
+    optional: true,
+  },
+  {
+    key: "homework_time",
+    group: "MAKING IT FIT",
+    title: "When could a little learning fit?",
+    hint: "Think of a 15–20 minute window. There’s no need to make a perfect schedule.",
+    options: [
+      "After school",
+      "After dinner",
+      "Before bedtime",
+      "It changes day to day",
+    ],
+  },
+  {
+    key: "who_present",
+    group: "MAKING IT FIT",
+    title: "Who’s usually there?",
+    hint: "A little context helps us plan for real life.",
+    options: [
+      "Just us",
+      "Siblings around, too",
+      "Another grown-up joins",
+      "It varies",
+    ],
+  },
+  {
+    key: "go_to_analogy",
+    group: "WHAT ALREADY WORKS",
+    title: "Have a go-to way of explaining things?",
+    hint: "We’ll build on your ideas. Leave this blank if you’d like us to suggest a starting point.",
+    placeholder: "We count toy cars in a pretend garage…",
+    optional: true,
+  },
+  {
+    key: "math_anxiety",
+    group: "A LITTLE SUPPORT FOR YOU",
+    title: "Does helping with math feel stressful?",
+    hint: "You’re learning how to help, too. We can make the guidance more structured.",
+    options: ["Not really", "A little", "Yes, honestly"],
+    optional: true,
+  },
+];
 export function OnboardingWizard({
   existingChild,
   initialParentName,
@@ -31,306 +170,262 @@ export function OnboardingWizard({
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [justCreated, setJustCreated] = useState(false);
-  const [form, setForm] = useState<FormState>(() => ({
-    parentName: initialParentName,
-    ...EMPTY_CHILD_PROFILE,
-    ...(existingChild
-      ? {
-          name: existingChild.name,
-          interests: existingChild.interests ?? "",
-          hobbies: existingChild.hobbies ?? "",
-          favorite_characters: existingChild.favorite_characters ?? "",
-          frustration: existingChild.frustration ?? "",
-          learning_style: existingChild.learning_style ?? "",
-          motivation: existingChild.motivation ?? "",
-          shy: existingChild.shy ?? "",
-          letters_level: existingChild.letters_level ?? "",
-          numbers_level: existingChild.numbers_level ?? "",
-          read_together: existingChild.read_together ?? "",
-          favorite_books: existingChild.favorite_books ?? "",
-          talks_after_story: existingChild.talks_after_story ?? "",
-          homework_time: existingChild.homework_time ?? "",
-          who_present: existingChild.who_present ?? "",
-          enjoys_learning: existingChild.enjoys_learning ?? "",
-          subject_likes: existingChild.subject_likes ?? "",
-          subject_struggle: existingChild.subject_struggle ?? "",
-          go_to_analogy: existingChild.go_to_analogy ?? "",
-          doesnt_work: existingChild.doesnt_work ?? "",
-          math_anxiety: existingChild.math_anxiety ?? "",
-        }
-      : {}),
-  }));
-
-  const key = STEPS[step];
-  const update = <K extends keyof FormState>(field: K) => (val: FormState[K]) =>
-    setForm((f) => ({ ...f, [field]: val }));
-
+  const [form, setForm] = useState<FormState>(() => {
+    const fields = { ...EMPTY_CHILD_PROFILE };
+    if (existingChild)
+      for (const key of Object.keys(fields) as (keyof ChildProfileInput)[])
+        fields[key] = existingChild[key] ?? "";
+    return { ...fields, parentName: initialParentName };
+  });
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (step > 0) heading.current?.focus();
+  }, [step]);
+  const question = QUESTIONS[step];
+  const value = form[question.key] ?? "";
+  const valid = question.optional || value.trim().length > 0;
+  const update = (v: string) => {
+    setForm((f) => ({ ...f, [question.key]: v }));
+    setError(null);
+  };
   async function finish() {
+    if (saving) return;
     setSaving(true);
     setError(null);
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    const { parentName, ...childFields } = form;
-
-    await supabase.from("parents").update({ name: parentName }).eq("id", user.id);
-
-    if (existingChild) {
-      const { error: updateError } = await supabase
-        .from("children")
-        .update(childFields)
-        .eq("id", existingChild.id);
-      if (updateError) {
-        setError("Couldn't save — try again.");
-        setSaving(false);
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+      if (authError || !user) {
+        router.push("/login");
         return;
       }
+      const { parentName, ...fields } = form;
+      const childFields = Object.fromEntries(
+        Object.entries(fields).map(([key, val]) => [
+          key,
+          typeof val === "string" ? val.trim() : val,
+        ]),
+      );
+      if (!childFields.name) {
+        setError("Please add a name or nickname for your child.");
+        setStep(1);
+        return;
+      }
+      const { error: parentError } = await supabase
+        .from("parents")
+        .update({ name: parentName.trim() })
+        .eq("id", user.id);
+      if (parentError) throw parentError;
+      const result = existingChild
+        ? await supabase
+            .from("children")
+            .update(childFields)
+            .eq("id", existingChild.id)
+            .eq("parent_id", user.id)
+        : await supabase
+            .from("children")
+            .insert({ ...childFields, parent_id: user.id });
+      if (result.error) throw result.error;
       router.push("/dashboard");
       router.refresh();
-      return;
-    }
-
-    const { error: insertError } = await supabase
-      .from("children")
-      .insert({ ...childFields, parent_id: user.id });
-    if (insertError) {
-      setError("Couldn't save — try again.");
+    } catch {
+      setError(
+        "We couldn’t save that just yet. Your answers are still here. Please try again.",
+      );
+    } finally {
       setSaving(false);
-      return;
     }
-
-    // First-time setup only — a returning parent editing their profile goes straight
-    // back to Home, no need to re-run the welcome story.
-    setSaving(false);
-    setJustCreated(true);
   }
-
-  if (justCreated) {
-    return (
-      <WelcomeFlow
-        childName={form.name}
-        parentName={form.parentName}
-        onDone={() => {
-          // Land on the Roadmap first, not Home — the roadmap is real and viewable
-          // immediately (honest "not yet observed" milestones included), so that's the
-          // instant payoff a parent gets before ever uploading a worksheet.
-          router.push("/progress");
-          router.refresh();
-        }}
-      />
-    );
-  }
-
+  const next = () => {
+    if (!valid || saving) return;
+    if (step === QUESTIONS.length - 1) void finish();
+    else {
+      setStep((s) => s + 1);
+      setError(null);
+    }
+  };
   return (
-    <div style={{ minHeight: "100vh" }} className="w-full flex justify-center px-6 py-10">
-      <div className="w-full animate-fade-in" style={{ maxWidth: 560 }}>
-        <div className="flex gap-1.5 mb-2">
-          {STEPS.map((_, i) => (
-            <div key={i} className="h-1.5 flex-1 rounded-full overflow-hidden" style={{ background: PALETTE.line }}>
+    <div className="onboarding-page">
+      <header className="onboarding-nav">
+        <Brand />
+        <span>
+          {existingChild
+            ? "Update your family profile"
+            : "A little about your family"}
+        </span>
+      </header>
+      <main className="onboarding-layout">
+        <div className="onboarding-form">
+          <div
+            className="onboarding-progress"
+            role="progressbar"
+            aria-label="Profile setup"
+            aria-valuenow={step + 1}
+            aria-valuemin={0}
+            aria-valuemax={QUESTIONS.length}
+          >
+            <span
+              style={{ transform: `scaleX(${(step + 1) / QUESTIONS.length})` }}
+            />
+          </div>
+          <p className="question-count">
+            {step + 1} of {QUESTIONS.length} ·{" "}
+            {question.optional ? "Optional" : "Let’s get to know you"}
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              next();
+            }}
+          >
+            <span className="section-kicker">{question.group}</span>
+            <h1 ref={heading} tabIndex={-1} id="question-title">
+              {question.title}
+            </h1>
+            <p className="question-hint" id="question-hint">
+              {question.hint}
+            </p>
+            {question.options ? (
               <div
-                className="h-full rounded-full transition-transform duration-500 ease-out"
-                style={{
-                  background: PALETTE.brand,
-                  transform: i <= step ? "scaleX(1)" : "scaleX(0)",
-                  transformOrigin: "left",
-                }}
+                className="onboarding-options"
+                role="group"
+                aria-labelledby="question-title"
+                aria-describedby="question-hint"
+              >
+                {question.options.map((option) => (
+                  <button
+                    type="button"
+                    key={option}
+                    aria-pressed={value === option}
+                    onClick={() => update(option)}
+                  >
+                    <span>{option}</span>
+                    <span className="choice-check" aria-hidden="true">
+                      {value === option && <Check size={16} />}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <input
+                key={question.key}
+                className="onboarding-input"
+                aria-labelledby="question-title"
+                aria-describedby="question-hint"
+                value={value}
+                onChange={(e) => update(e.target.value)}
+                placeholder={question.placeholder}
+                maxLength={
+                  question.key === "name" || question.key === "parentName"
+                    ? 80
+                    : 500
+                }
+                autoComplete={
+                  question.key === "parentName" ? "given-name" : "off"
+                }
+                required={!question.optional}
               />
+            )}
+            {error && (
+              <p className="form-error" role="alert">
+                {error}
+              </p>
+            )}
+            <div className="onboarding-actions">
+              <button
+                type="button"
+                className="onboarding-back"
+                disabled={step === 0 || saving}
+                onClick={() => {
+                  setStep((s) => s - 1);
+                  setError(null);
+                }}
+                aria-label="Previous question"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <button
+                className="easy-button"
+                type="submit"
+                disabled={!valid || saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} /> Saving your
+                    profile…
+                  </>
+                ) : step === QUESTIONS.length - 1 ? (
+                  <>
+                    Show my roadmap <ArrowRight size={18} />
+                  </>
+                ) : (
+                  <>
+                    Continue <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
             </div>
-          ))}
+            {question.optional && step < QUESTIONS.length - 1 && (
+              <button
+                type="button"
+                className="skip-question"
+                onClick={() => setStep((s) => s + 1)}
+              >
+                Skip for now
+              </button>
+            )}
+          </form>
+          <p className="onboarding-privacy">
+            For parents and guardians. Share only what feels useful.
+          </p>
         </div>
-        <div className="text-xs mb-5" style={{ color: PALETTE.inkSoft }}>
-          Step {step + 1} of {STEPS.length}
-        </div>
-
-        <Card>
-          <div className="p-5">
-            <h2 className="font-serif-display mb-4" style={{ fontSize: 20, fontWeight: 700 }}>
-              {STEP_TITLES[key]}
-            </h2>
-
-            {key === "identity" && (
-              <>
-                <TextField label="Your name" value={form.parentName} onChange={update("parentName")} placeholder="e.g. Jordan" />
-                <TextField label="Your kindergartner's name" value={form.name} onChange={update("name")} placeholder="e.g. Maya" />
-                <TextField
-                  label="2–3 things they're obsessed with right now"
-                  value={form.interests ?? ""}
-                  onChange={update("interests")}
-                  placeholder="dinosaurs, unicorns, soccer..."
-                />
-                <TextField
-                  label="What do they love doing outside school?"
-                  value={form.hobbies ?? ""}
-                  onChange={update("hobbies")}
-                  placeholder="building blocks, drawing..."
-                  optional
-                />
-                <TextField
-                  label="Any favorite characters or shows?"
-                  value={form.favorite_characters ?? ""}
-                  onChange={update("favorite_characters")}
-                  placeholder="used for tone, never reproduced directly"
-                  optional
-                />
-              </>
-            )}
-
-            {key === "temperament" && (
-              <>
-                <ChoiceGroup
-                  label="When something's hard, they usually..."
-                  options={["keep trying", "get frustrated fast", "shut down"]}
-                  value={form.frustration ?? ""}
-                  onChange={update("frustration")}
-                />
-                <ChoiceGroup
-                  label="They learn better..."
-                  options={["sitting & focused", "moving / hands-on"]}
-                  value={form.learning_style ?? ""}
-                  onChange={update("learning_style")}
-                />
-                <ChoiceGroup
-                  label="They're more motivated by..."
-                  options={["praise", "a challenge", "getting it right"]}
-                  value={form.motivation ?? ""}
-                  onChange={update("motivation")}
-                />
-                <ChoiceGroup
-                  label="With new people or situations, they're..."
-                  options={["shy, slow-to-warm", "jump-right-in"]}
-                  value={form.shy ?? ""}
-                  onChange={update("shy")}
-                />
-              </>
-            )}
-
-            {key === "academic" && (
-              <>
-                <ChoiceGroup
-                  label="Letters & sounds"
-                  options={["just starting", "knows most letters", "blending sounds"]}
-                  value={form.letters_level ?? ""}
-                  onChange={update("letters_level")}
-                />
-                <ChoiceGroup
-                  label="Numbers"
-                  options={["counting", "recognizing numbers", "simple addition"]}
-                  value={form.numbers_level ?? ""}
-                  onChange={update("numbers_level")}
-                />
-              </>
-            )}
-
-            {key === "reading" && (
-              <>
-                <ChoiceGroup
-                  label="Do you already read together at night?"
-                  options={["yes", "sometimes", "not really"]}
-                  value={form.read_together ?? ""}
-                  onChange={update("read_together")}
-                />
-                <TextField
-                  label="Any books they ask for over and over?"
-                  value={form.favorite_books ?? ""}
-                  onChange={update("favorite_books")}
-                  optional
-                />
-                <ChoiceGroup
-                  label="After a story, do they want to talk about it?"
-                  options={["yes, loves to", "just wants to sleep"]}
-                  value={form.talks_after_story ?? ""}
-                  onChange={update("talks_after_story")}
-                />
-                <TextField
-                  label="What time does homework usually happen?"
-                  value={form.homework_time ?? ""}
-                  onChange={update("homework_time")}
-                  optional
-                />
-                <TextField
-                  label="Who's usually there for it?"
-                  value={form.who_present ?? ""}
-                  onChange={update("who_present")}
-                  placeholder="just me, siblings around..."
-                  optional
-                />
-              </>
-            )}
-
-            {key === "signal" && (
-              <>
-                <ChoiceGroup
-                  label="Do they generally enjoy learning?"
-                  options={["yes, mostly", "it's a struggle to engage them"]}
-                  value={form.enjoys_learning ?? ""}
-                  onChange={update("enjoys_learning")}
-                />
-                <TextField
-                  label="Any subject they already light up for?"
-                  value={form.subject_likes ?? ""}
-                  onChange={update("subject_likes")}
-                  optional
-                />
-                <TextField
-                  label="Any subject that's been a fight to get done?"
-                  value={form.subject_struggle ?? ""}
-                  onChange={update("subject_struggle")}
-                  optional
-                />
-                <TextField
-                  label="A go-to analogy or comparison you already use"
-                  value={form.go_to_analogy ?? ""}
-                  onChange={update("go_to_analogy")}
-                  placeholder='e.g. "I compare fractions to pizza slices"'
-                  optional
-                />
-                <TextField
-                  label="Anything that reliably doesn't work with them?"
-                  value={form.doesnt_work ?? ""}
-                  onChange={update("doesnt_work")}
-                  optional
-                />
-                <ChoiceGroup
-                  label="Does helping with math feel stressful for you?"
-                  options={["not really", "a little", "yes, honestly"]}
-                  value={form.math_anxiety ?? ""}
-                  onChange={update("math_anxiety")}
-                />
-              </>
-            )}
+        <aside
+          className="onboarding-preview"
+          aria-label="Your roadmap is taking shape"
+        >
+          <span className="section-kicker">A PATH THAT STARTS WITH YOU</span>
+          <h2>
+            {form.name ? `${form.name}’s little world.` : "Their little world."}
+          </h2>
+          <p className="preview-caption">
+            {step < 3
+              ? "A few details help bring the first step into focus."
+              : step < 8
+                ? "We’re getting to know how you learn together."
+                : "A starting point, with plenty still to discover."}
+          </p>
+          <div className="preview-trail" aria-hidden="true">
+            <div className="preview-connector" />
+            {[
+              "Getting to know them",
+              "Exploring numbers",
+              "Discovering reading",
+              "Growing together",
+            ].map((label, i) => (
+              <div
+                key={label}
+                className={`preview-node ${step >= i * 4 ? "preview-known" : ""}`}
+                style={{ marginLeft: i % 2 ? 45 : 0 }}
+              >
+                <span>
+                  <Leaf size={21} />
+                </span>
+                <p>{step >= i * 4 ? label : "A little discovery ahead"}</p>
+              </div>
+            ))}
           </div>
-        </Card>
-
-        {error && (
-          <div className="text-sm mb-4" style={{ color: PALETTE.accent }}>
-            {error}
+          <TrailGuide className="onboarding-guide" />
+          <div className="preview-note" aria-live="polite">
+            {form.interests
+              ? `Inspired by ${form.interests}.`
+              : "Built around what makes them, them."}
+            <span>Preview · Skills begin as not yet observed.</span>
           </div>
-        )}
-
-        <div className="flex gap-3 mt-2">
-          {step > 0 && (
-            <SecondaryButton onClick={() => setStep((s) => s - 1)}>
-              <ChevronLeft size={16} /> Back
-            </SecondaryButton>
-          )}
-          {step < STEPS.length - 1 ? (
-            <PrimaryButton onClick={() => setStep((s) => s + 1)} icon={ChevronRight}>
-              Continue
-            </PrimaryButton>
-          ) : (
-            <PrimaryButton onClick={finish} disabled={saving} icon={Check}>
-              {saving ? "Saving…" : existingChild ? "Save changes" : "Create profile"}
-            </PrimaryButton>
-          )}
-        </div>
-      </div>
+        </aside>
+      </main>
     </div>
   );
 }

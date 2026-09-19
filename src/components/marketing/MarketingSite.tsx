@@ -1,521 +1,380 @@
 import Link from "next/link";
-import { PALETTE, RADIUS } from "@/lib/palette";
-import { Wordmark } from "@/components/ui/primitives";
 import {
-  TornEdge,
-  DoodleSprout,
-  DoodleOpenBook,
-  DoodleHeart,
-  DoodlePencil,
-  DoodleSparkle,
-  DoodleShield,
-  DoodleChat,
-} from "@/components/marketing/Doodles";
-
-const M = {
-  cream: "#FBF3E7",
-  creamDeep: "#F3E4C8",
-  paper: "#FFFCF6",
-  ink: "#2B2318",
-  inkSoft: "#6B6151",
-  inkFaint: "#948A76",
-  line: "#E7DCC5",
-};
-
-const NAV_LINKS = [
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#included", label: "What's included" },
-  { href: "#research", label: "Our approach" },
+  ArrowRight,
+  BookOpen,
+  Check,
+  Clock3,
+  Heart,
+  MessageCircle,
+  Route,
+  ShieldCheck,
+  Sparkles,
+  Star,
+} from "lucide-react";
+import { Brand } from "@/components/easy/Brand";
+import { TrailGuide } from "@/components/easy/TrailGuide";
+import { InterestDemo } from "./InterestDemo";
+const nights = [
+  {
+    night: "01",
+    title: "A good place to start.",
+    note: "Maya loves dinosaurs. Let’s try counting with a little herd.",
+    detail: "We start with what you share.",
+    color: "blue",
+  },
+  {
+    night: "08",
+    title: "Oh, that clicked.",
+    note: "Moving the dinosaurs helped. We’ll lead with hands-on objects next time.",
+    detail: "Your observations shape the next lesson.",
+    color: "green",
+  },
+  {
+    night: "20",
+    title: "Look how far you’ve come.",
+    note: "Maya is more comfortable counting objects. Let’s explore comparing two groups.",
+    detail: "The path grows as you learn together.",
+    color: "yellow",
+  },
 ];
-
 export function MarketingSite() {
   return (
-    <div style={{ background: M.cream, color: M.ink }} className="w-full overflow-x-hidden">
-      <Nav />
-      <Hero />
-      <PrincipleBand />
-      <Contrast />
-      <HowItWorks />
-      <WhatsIncluded />
-      <Research />
-      <FinalCta />
-      <Footer />
-    </div>
-  );
-}
-
-function Nav() {
-  return (
-    <header className="sticky top-0 z-30" style={{ background: `${M.cream}E8`, backdropFilter: "blur(10px)" }}>
-      <div className="max-w-[1160px] mx-auto flex items-center justify-between px-6 sm:px-8 py-4">
-        <Wordmark />
-        <nav className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="text-sm font-semibold" style={{ color: M.inkSoft }}>
-              {l.label}
-            </a>
-          ))}
-        </nav>
-        <Link
-          href="/login"
-          className="btn-press text-sm font-bold px-5 py-2.5 rounded-full transition-transform duration-150"
-          style={{ background: PALETTE.brand, color: "#fff" }}
-        >
-          Get started
-        </Link>
-      </div>
-    </header>
-  );
-}
-
-function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase px-3 py-1.5 rounded-full"
-      style={{ background: PALETTE.goldSoft, color: "#8a5c10", letterSpacing: "0.06em" }}
-    >
-      {children}
-    </span>
-  );
-}
-
-function Hero() {
-  return (
-    <section className="relative px-6 sm:px-8 pt-16 sm:pt-20 pb-10">
-      <DoodleSprout color={PALETTE.brand} size={34} className="hidden sm:block" />
-      <div className="max-w-[820px] mx-auto text-center relative">
-        <div
-          className="absolute hidden lg:block"
-          style={{ top: -6, left: -110, transform: "rotate(-8deg)", color: PALETTE.brand, opacity: 0.8 }}
-        >
-          <DoodleSprout color={PALETTE.brand} size={44} />
-        </div>
-        <div
-          className="absolute hidden lg:block"
-          style={{ top: 30, right: -100, transform: "rotate(10deg)", color: PALETTE.accent, opacity: 0.8 }}
-        >
-          <DoodlePencil color={PALETTE.accent} size={40} />
-        </div>
-
-        <Pill>For parents of Pre-K–3rd graders</Pill>
-
-        <h1
-          className="font-fraunces mt-6 mb-5"
-          style={{ fontSize: "clamp(34px, 5.2vw, 58px)", fontWeight: 600, lineHeight: 1.08, letterSpacing: "-0.01em" }}
-        >
-          The best tutor your kid will ever have is already home.
-        </h1>
-
-        <p className="text-lg mx-auto mb-8" style={{ color: M.inkSoft, maxWidth: 560, lineHeight: 1.55 }}>
-          Easy preps you before you teach, and coaches you through it — so you can be the confident teacher
-          your kid needs, without guessing. No live AI conversations with your child — ever.
-        </p>
-
-        <div className="flex items-center justify-center gap-3 flex-wrap mb-3">
-          <Link
-            href="/login"
-            className="btn-press text-[15px] font-bold px-7 py-3.5 rounded-full transition-transform duration-150"
-            style={{ background: PALETTE.brand, color: "#fff" }}
-          >
-            Get started
+    <div className="marketing-site">
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
+      <header className="marketing-nav">
+        <div className="marketing-container nav-inner">
+          <Brand />
+          <nav aria-label="Main navigation">
+            <a href="#how-it-works">How it works</a>
+            <a href="#the-roadmap">The roadmap</a>
+            <a href="#questions">Good questions</a>
+          </nav>
+          <Link href="/login" className="nav-login">
+            Log in <ArrowRight size={16} />
           </Link>
-          <a
-            href="#how-it-works"
-            className="text-[15px] font-bold px-7 py-3.5 rounded-full transition-colors duration-150"
-            style={{ color: M.ink, border: `1.5px solid ${M.line}` }}
-          >
-            See how it works
-          </a>
         </div>
-        <p className="text-xs font-semibold" style={{ color: M.inkFaint }}>
-          Kindergarten, today. 1st–3rd grade, next.
-        </p>
-      </div>
-
-      <BriefingPreview />
-    </section>
-  );
-}
-
-function BriefingPreview() {
-  return (
-    <div className="max-w-[720px] mx-auto mt-14 relative">
-      <div
-        className="absolute hidden sm:block"
-        style={{ top: -18, right: 8, transform: "rotate(12deg)", color: PALETTE.gold }}
-      >
-        <DoodleSparkle color={PALETTE.gold} size={30} />
-      </div>
-      <div
-        className="rounded-[28px] p-2"
-        style={{ background: M.paper, border: `1px solid ${M.line}`, boxShadow: "0 30px 60px -30px rgba(43,35,24,0.25)" }}
-      >
-        <div className="rounded-3xl p-6 sm:p-8" style={{ background: "#fff", border: `1px solid ${M.line}` }}>
-          <div className="flex items-center gap-2 mb-4">
-            <div
-              className="flex items-center justify-center"
-              style={{ width: 32, height: 32, borderRadius: 10, background: PALETTE.accent, transform: "rotate(-6deg)" }}
-            >
-              <span className="text-white text-xs font-bold">Aa</span>
-            </div>
-            <div className="text-left">
-              <p className="text-[11px] font-bold uppercase" style={{ color: PALETTE.accent, letterSpacing: "0.05em" }}>
-                Tonight&apos;s briefing
-              </p>
-              <p className="text-sm font-bold font-fraunces">Addition within 10</p>
+      </header>
+      <main id="main-content">
+        <section className="marketing-container hero-section">
+          <div className="hero-copy">
+            <span className="eyebrow-pill">
+              <span className="live-dot" /> FOR THE PARENT. FOR THEIR
+              POSSIBILITIES.
+            </span>
+            <h1>
+              Little lessons.
+              <br />
+              <span>Big possibilities.</span>
+            </h1>
+            <p className="hero-description">
+              You know your kid.
+              <br />
+              We help you know what comes next.
+            </p>
+            <p className="hero-body">
+              An adaptive AI platform that turns everyday moments into a clear
+              path forward. You bring the connection. Easy brings the plan.
+            </p>
+            <Link className="easy-button" href="/login">
+              Let’s grow together <ArrowRight size={19} />
+            </Link>
+            <p className="hero-reassurance">
+              <Clock3 size={16} /> 15–20 minutes together. One meaningful next
+              step.
+            </p>
+            <div className="parent-first">
+              <ShieldCheck size={23} />
+              <span>
+                Today, every lesson goes through you first.
+                <br />
+                <strong>You’re the teacher. We’re here for you.</strong>
+              </span>
             </div>
           </div>
-          <div className="text-left grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="rounded-2xl p-3.5" style={{ background: M.cream }}>
-              <p className="text-[11px] font-bold uppercase mb-1" style={{ color: M.inkFaint, letterSpacing: "0.04em" }}>
-                Try this analogy
-              </p>
-              <p className="text-sm font-semibold">
-                &ldquo;If you have 4 dinosaurs and 3 more show up, how many are stomping around now?&rdquo;
-              </p>
-            </div>
-            <div className="rounded-2xl p-3.5" style={{ background: PALETTE.brandSoft }}>
-              <p className="text-[11px] font-bold uppercase mb-1" style={{ color: PALETTE.brand, letterSpacing: "0.04em" }}>
-                Say this
-              </p>
-              <p className="text-sm font-semibold">
-                &ldquo;You figured that out yourself — I love how you counted it out.&rdquo;
-              </p>
-            </div>
+          <InterestDemo />
+        </section>
+        <div className="promise-band">
+          <span>
+            <Heart size={18} /> Parent-led, connection-first
+          </span>
+          <span>
+            <Route size={18} /> A path that grows with them
+          </span>
+          <span>
+            <Sparkles size={18} /> Small moments that matter
+          </span>
+        </div>
+        <section className="marketing-container problem-section">
+          <div>
+            <span className="section-kicker">
+              YOU DON’T NEED TO HAVE ALL THE ANSWERS
+            </span>
+            <h2>
+              “I want to help.
+              <br />
+              Where do I start?”
+            </h2>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PrincipleBand() {
-  return (
-    <section className="relative" style={{ background: PALETTE.brandDeep }}>
-      <TornEdge fill={PALETTE.brandDeep} />
-      <div className="max-w-[720px] mx-auto text-center px-6 py-16 sm:py-20 -mt-8">
-        <DoodleShield color="#EFEBDA" size={38} className="mx-auto mb-5 opacity-90" />
-        <p
-          className="font-fraunces mb-4"
-          style={{ fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 600, lineHeight: 1.15, color: "#fff" }}
-        >
-          No live AI conversations
-          <br />
-          with your child — ever.
-        </p>
-        <p className="text-base max-w-[46ch] mx-auto" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.6 }}>
-          Not in homework mode, not in bedtime stories, not when you&apos;re not in the room. Everything Easy
-          generates is reviewed by you first. If your child ever sees a screen, it&apos;s a static,
-          parent-approved activity — never an open-ended chat.
-        </p>
-      </div>
-      <TornEdge fill={M.cream} flip />
-    </section>
-  );
-}
-
-function Contrast() {
-  return (
-    <section className="px-6 sm:px-8 py-16 sm:py-20 text-center">
-      <div className="max-w-[680px] mx-auto">
-        <p className="font-fraunces mb-2" style={{ fontSize: "clamp(22px, 3.4vw, 30px)", color: M.inkFaint, fontWeight: 500 }}>
-          Other AI tutors talk to your kid.
-        </p>
-        <p className="font-fraunces" style={{ fontSize: "clamp(28px, 4.4vw, 40px)", color: PALETTE.accent, fontWeight: 600 }}>
-          Easy talks to you.
-        </p>
-        <p className="text-base mt-5 max-w-[52ch] mx-auto" style={{ color: M.inkSoft, lineHeight: 1.6 }}>
-          Kids under 2nd or 3rd grade learn best from someone they trust — not a screen. So instead of building
-          a better chatbot, we built a coach for the person your kid already trusts most: you.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-const STEPS = [
-  {
-    icon: DoodlePencil,
-    color: PALETTE.accent,
-    soft: PALETTE.accentSoft,
-    title: "Snap it, or skip it",
-    body: "Photograph tonight's worksheet, or let Easy suggest a lesson built around your kid when there isn't any homework.",
-  },
-  {
-    icon: DoodleOpenBook,
-    color: PALETTE.gold,
-    soft: PALETTE.goldSoft,
-    title: "Get briefed, not handed a script",
-    body: "What to teach, why it matters at this stage, and exactly how to explain it using what your kid already loves.",
-  },
-  {
-    icon: DoodleHeart,
-    color: PALETTE.brand,
-    soft: PALETTE.brandSoft,
-    title: "You teach. We prepped you.",
-    body: "You're still the one in the room. Easy's job ends the moment yours begins.",
-  },
-  {
-    icon: DoodleSparkle,
-    color: PALETTE.accent,
-    soft: PALETTE.accentSoft,
-    title: "It remembers next time",
-    body: "Tell us how it went in under a minute, and every future lesson gets sharper about your specific kid.",
-  },
-];
-
-function HowItWorks() {
-  return (
-    <section id="how-it-works" className="px-6 sm:px-8 py-16 sm:py-20">
-      <div className="max-w-[1080px] mx-auto">
-        <div className="text-center mb-12">
-          <Pill>Four steps, every night</Pill>
-          <h2 className="font-fraunces mt-4" style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 600 }}>
-            How Easy works
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {STEPS.map((s, i) => (
-            <div
-              key={s.title}
-              className="rounded-3xl p-6 text-left"
-              style={{
-                background: M.paper,
-                border: `1px solid ${M.line}`,
-                transform: i % 2 === 0 ? "rotate(-1deg)" : "rotate(1deg)",
-              }}
-            >
-              <div
-                className="flex items-center justify-center mb-4"
-                style={{ width: 52, height: 52, borderRadius: RADIUS.md, background: s.soft }}
-              >
-                <s.icon color={s.color} size={26} />
-              </div>
-              <p className="font-fraunces font-semibold mb-1.5" style={{ fontSize: 18 }}>
-                {s.title}
-              </p>
-              <p className="text-sm" style={{ color: M.inkSoft, lineHeight: 1.5 }}>
-                {s.body}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-const FEATURES = [
-  {
-    icon: DoodlePencil,
-    color: PALETTE.accent,
-    soft: PALETTE.accentSoft,
-    title: "Homework Helper",
-    body: "Photograph any kindergarten worksheet and get a full teaching briefing in under a minute.",
-  },
-  {
-    icon: DoodleOpenBook,
-    color: PALETTE.brand,
-    soft: PALETTE.brandSoft,
-    title: "Bedtime story guide",
-    body: "Themes, discussion questions, and read-aloud tips for books your family already owns.",
-  },
-  {
-    icon: DoodleSparkle,
-    color: PALETTE.gold,
-    soft: PALETTE.goldSoft,
-    title: "Tonight's suggested lesson",
-    body: "No homework? Easy builds a five-minute lesson around what's clicking and what needs more time.",
-  },
-  {
-    icon: DoodleHeart,
-    color: PALETTE.accent,
-    soft: PALETTE.accentSoft,
-    title: "Progress, not scores",
-    body: "Not yet introduced → just starting → getting there → comfortable. No grades, no percentiles, ever.",
-  },
-  {
-    icon: DoodleChat,
-    color: PALETTE.brand,
-    soft: PALETTE.brandSoft,
-    title: "Visible iteration",
-    body: "Easy tells you exactly what it's adjusting and why, every time — never a silent backend update.",
-  },
-  {
-    icon: DoodleShield,
-    color: PALETTE.gold,
-    soft: PALETTE.goldSoft,
-    title: "Built on the safety principle",
-    body: "No live AI-child interaction, no session recording, ever. It's the one rule nothing else overrides.",
-  },
-];
-
-function WhatsIncluded() {
-  return (
-    <section id="included" className="relative" style={{ background: M.creamDeep }}>
-      <TornEdge fill={M.creamDeep} />
-      <div className="max-w-[1080px] mx-auto px-6 sm:px-8 py-16 sm:py-20 -mt-8">
-        <div className="text-center mb-12">
-          <h2 className="font-fraunces" style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 600 }}>
-            What&apos;s included
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="rounded-3xl p-6 text-left" style={{ background: M.paper, border: `1px solid ${M.line}` }}>
-              <div
-                className="flex items-center justify-center mb-4"
-                style={{ width: 44, height: 44, borderRadius: RADIUS.sm, background: f.soft }}
-              >
-                <f.icon color={f.color} size={22} />
-              </div>
-              <p className="font-fraunces font-semibold mb-1.5" style={{ fontSize: 17 }}>
-                {f.title}
-              </p>
-              <p className="text-sm" style={{ color: M.inkSoft, lineHeight: 1.5 }}>
-                {f.body}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-      <TornEdge fill={M.cream} flip />
-    </section>
-  );
-}
-
-const RESEARCH = [
-  {
-    title: "Vygotsky's Zone of Proximal Development",
-    body: "Kids learn best just past what they can do alone, with guidance from someone they trust — not solo, not passively.",
-  },
-  {
-    title: "Bloom's two-sigma problem",
-    body: "One-on-one tutoring reliably outperforms group instruction by roughly two standard deviations. Easy tries to make that kind of attention achievable at home.",
-  },
-  {
-    title: "Process praise, not person praise",
-    body: "“You worked hard on that” builds persistence in 5–6 year olds. “You're so smart” measurably doesn't. Every briefing hands you the exact phrasing.",
-  },
-  {
-    title: "Math-anxiety transmission",
-    body: "Math-anxious parents' kids learn measurably less — but giving those parents more structure changes the outcome. That's the exact mechanism Easy is built around.",
-  },
-];
-
-function Research() {
-  return (
-    <section id="research" className="px-6 sm:px-8 py-16 sm:py-20">
-      <div className="max-w-[900px] mx-auto">
-        <div className="text-center mb-12">
-          <Pill>Grounded in real research</Pill>
-          <h2 className="font-fraunces mt-4" style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 600 }}>
-            Our approach isn&apos;t a guess
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {RESEARCH.map((r) => (
-            <div key={r.title} className="rounded-3xl p-6" style={{ background: M.paper, border: `1px solid ${M.line}` }}>
-              <p className="font-fraunces font-semibold mb-2" style={{ fontSize: 16 }}>
-                {r.title}
-              </p>
-              <p className="text-sm" style={{ color: M.inkSoft, lineHeight: 1.55 }}>
-                {r.body}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FinalCta() {
-  return (
-    <section className="px-6 sm:px-8 py-20 sm:py-24 text-center">
-      <DoodleSprout color={PALETTE.brand} size={30} className="mx-auto mb-5" />
-      <h2 className="font-fraunces mb-7" style={{ fontSize: "clamp(28px, 4.4vw, 42px)", fontWeight: 600 }}>
-        Start teaching, tonight.
-      </h2>
-      <Link
-        href="/login"
-        className="btn-press inline-flex text-[15px] font-bold px-8 py-4 rounded-full transition-transform duration-150"
-        style={{ background: PALETTE.brand, color: "#fff" }}
-      >
-        Get started free
-      </Link>
-    </section>
-  );
-}
-
-const FOOTER_COLUMNS = [
-  {
-    heading: "Product",
-    links: [
-      { label: "How it works", href: "#how-it-works" },
-      { label: "What's included", href: "#included" },
-      { label: "Our approach", href: "#research" },
-    ],
-  },
-  {
-    heading: "Get started",
-    links: [
-      { label: "Sign in", href: "/login" },
-      { label: "Create an account", href: "/login" },
-    ],
-  },
-];
-
-function Footer() {
-  return (
-    <footer className="relative" style={{ background: M.creamDeep }}>
-      <TornEdge fill={M.creamDeep} />
-      <div className="max-w-[1080px] mx-auto px-6 sm:px-8 pt-10 pb-4">
-        <div className="flex flex-wrap gap-12 justify-between mb-16">
-          <div style={{ maxWidth: 260 }}>
-            <Wordmark />
-            <p className="text-sm mt-3" style={{ color: M.inkSoft, lineHeight: 1.5 }}>
-              An AI coaching layer for parents — never a chatbot for kids.
+          <div>
+            <p>
+              You’ve got a kitchen table, a handful of blocks, and a kid with a
+              world of questions. What you need is a little direction.
+            </p>
+            <p>
+              Easy helps you choose what to work on, find an explanation that
+              makes sense, and notice what’s clicking. One evening at a time.
             </p>
           </div>
-          <div className="flex flex-wrap gap-14">
-            {FOOTER_COLUMNS.map((col) => (
-              <div key={col.heading}>
-                <p className="text-xs font-bold uppercase mb-3" style={{ color: M.inkFaint, letterSpacing: "0.05em" }}>
-                  {col.heading}
-                </p>
-                <div className="flex flex-col gap-2">
-                  {col.links.map((l) => (
-                    <a key={l.label} href={l.href} className="text-sm font-semibold" style={{ color: M.ink }}>
-                      {l.label}
-                    </a>
-                  ))}
+        </section>
+        <section id="how-it-works" className="how-section">
+          <div className="marketing-container">
+            <div className="section-heading">
+              <span className="section-kicker">
+                A LITTLE STRUCTURE. A LOT OF CONNECTION.
+              </span>
+              <h2>Your evening, made a little easier.</h2>
+              <p>
+                15-20 minutes of real, focused progress, a genuine daily habit,
+                not a quick task.
+              </p>
+            </div>
+            <div className="how-grid">
+              {[
+                {
+                  icon: Heart,
+                  n: "01",
+                  title: "Notice their world",
+                  text: "Tell us what they love, where they get stuck, and what already works.",
+                },
+                {
+                  icon: Route,
+                  n: "02",
+                  title: "See a path forward",
+                  text: "A roadmap brings the next learning step into focus. No worksheet needed.",
+                },
+                {
+                  icon: BookOpen,
+                  n: "03",
+                  title: "Make it yours",
+                  text: "Review the plan, grab a few everyday objects, and teach in your own voice.",
+                },
+                {
+                  icon: MessageCircle,
+                  n: "04",
+                  title: "Tell us what clicked",
+                  text: "A quick parent check-in helps shape the next lesson. You’ll see what changes, and why.",
+                },
+              ].map((item) => (
+                <article className="how-card" key={item.n}>
+                  <div className="how-card-top">
+                    <item.icon size={27} />
+                    <span>{item.n}</span>
+                  </div>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                </article>
+              ))}
+            </div>
+            <div className="plan-payoff">
+              <Check size={20} />
+              <span>
+                A thoughtful plan for tonight. A clearer picture for tomorrow.
+              </span>
+            </div>
+          </div>
+        </section>
+        <section className="marketing-container learning-story">
+          <div className="section-heading">
+            <span className="section-kicker">
+              PERSONALIZATION YOU CAN ACTUALLY SEE
+            </span>
+            <h2>Watch Easy learn Maya.</h2>
+            <p>
+              An illustrative journey: the more you notice, the better the next
+              step fits.
+            </p>
+          </div>
+          <div className="night-grid">
+            {nights.map((night, i) => (
+              <article
+                className={`night-card night-${night.color}`}
+                key={night.night}
+              >
+                <span className="night-label">NIGHT {night.night}</span>
+                <div className="night-art" aria-hidden="true">
+                  <TrailGuide variant={i === 0 ? "blue" : "green"} />
+                  <span className="night-spark">
+                    {i === 0 ? "?" : i === 1 ? "!" : "✦"}
+                  </span>
+                </div>
+                <h3>{night.title}</h3>
+                <p>{night.note}</p>
+                <div className="night-footer">{night.detail}</div>
+              </article>
+            ))}
+          </div>
+        </section>
+        <section id="the-roadmap" className="roadmap-story marketing-container">
+          <div>
+            <span className="section-kicker">
+              THE BIG PICTURE, ONE LITTLE STEP AT A TIME
+            </span>
+            <h2>
+              A roadmap.
+              <br />
+              Not a guessing game.
+            </h2>
+            <p>
+              See what you’ve explored, what needs a little practice, and where
+              to go next. Learning has twists and turns. Your plan should, too.
+            </p>
+            <ul className="check-list">
+              <li>
+                <Check /> A focused next step when you open Easy
+              </li>
+              <li>
+                <Check /> Clear skill labels, without scores or comparisons
+              </li>
+              <li>
+                <Check /> Your feedback shapes the way forward
+              </li>
+            </ul>
+            <Link href="/login" className="text-link">
+              Find your starting point <ArrowRight size={18} />
+            </Link>
+          </div>
+          <div className="story-path" aria-label="Illustrative learning path">
+            <span className="sample-tag">ILLUSTRATIVE PATH</span>
+            <div className="story-path-line" aria-hidden="true" />
+            {[
+              {
+                title: "A first discovery",
+                label: "Just starting",
+                icon: Sparkles,
+              },
+              { title: "Something clicks", label: "Getting there", icon: Star },
+              { title: "A new possibility", label: "Comfortable", icon: Route },
+            ].map((n, i) => (
+              <div className={`story-node story-node-${i}`} key={n.title}>
+                <span>
+                  <n.icon size={25} />
+                </span>
+                <div>
+                  <strong>{n.title}</strong>
+                  <p>{n.label}</p>
                 </div>
               </div>
             ))}
+            <TrailGuide className="story-guide" />
           </div>
-        </div>
-        <div
-          className="flex items-center justify-between flex-wrap gap-2 pb-6 pt-4"
-          style={{ borderTop: `1px solid ${M.line}` }}
-        >
-          <p className="text-xs" style={{ color: M.inkFaint }}>
-            © 2026 Easy. Built to help you teach, not to keep your kid on a screen.
-          </p>
-        </div>
-        <p
-          className="font-fraunces select-none pointer-events-none leading-none overflow-hidden"
-          style={{
-            fontSize: "clamp(64px, 15vw, 180px)",
-            fontWeight: 600,
-            color: M.line,
-            marginBottom: -20,
-            whiteSpace: "nowrap",
-          }}
-        >
-          Easy
+        </section>
+        <section className="difference-section">
+          <div className="marketing-container">
+            <div className="section-heading">
+              <span className="section-kicker">
+                YOUR CONNECTION IS THE STARTING POINT
+              </span>
+              <h2>
+                Support for the teacher
+                <br />
+                they already trust.
+              </h2>
+            </div>
+            <div className="difference-grid">
+              <article>
+                <BookOpen />
+                <span className="section-kicker">AI TUTORS · SUCH AS ELLO</span>
+                <h3>The AI teaches.</h3>
+                <p>A digital tutor takes the teaching role.</p>
+              </article>
+              <article>
+                <Route />
+                <span className="section-kicker">
+                  CENTERS · KUMON & MATHNASIUM
+                </span>
+                <h3>You go to the lesson.</h3>
+                <p>Structured practice takes place at a learning center.</p>
+              </article>
+              <article className="easy-difference">
+                <Heart />
+                <span className="section-kicker">THE EASY WAY</span>
+                <h3>
+                  You teach.
+                  <br />
+                  We prepare you.
+                </h3>
+                <p>
+                  Guidance that fits into the time you already spend together.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+        <section id="questions" className="marketing-container faq-section">
+          <div>
+            <span className="section-kicker">GOOD QUESTIONS</span>
+            <h2>A little reassurance.</h2>
+            <TrailGuide className="faq-guide" />
+          </div>
+          <div className="faq-list">
+            {[
+              [
+                "What if I’m not a teacher?",
+                "That’s who Easy is for. Each briefing gives you an explanation, everyday objects to use, questions to ask, and another approach for when something doesn’t click.",
+              ],
+              [
+                "Does my kid talk to the AI?",
+                "Today, Easy works with you, the parent. You review the lesson and lead the learning. Feedback comes from you, too.",
+              ],
+              [
+                "Do we need homework to get started?",
+                "No. The Roadmap is the starting point. A homework photo can help inform the plan, but it isn’t a prerequisite.",
+              ],
+              [
+                "What if we miss an evening?",
+                "Come back when you can. There’s room for real life here. Pick up with one manageable next step.",
+              ],
+            ].map(([q, a]) => (
+              <details key={q}>
+                <summary>
+                  {q}
+                  <span aria-hidden="true">+</span>
+                </summary>
+                <p>{a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+        <section className="marketing-container">
+          <div className="closing-card">
+            <span className="section-kicker">
+              MORE “LET’S TRY.” LESS “I DON’T KNOW.”
+            </span>
+            <h2>
+              You’ve got the connection.
+              <br />
+              Let’s give it a little direction.
+            </h2>
+            <p>Less than one Kumon session. For the whole month.</p>
+            <span className="pricing-note">
+              Our pricing is still being tested. No paid plan is available yet.
+            </span>
+            <Link href="/login" className="easy-button">
+              Start your little adventure <ArrowRight size={19} />
+            </Link>
+          </div>
+        </section>
+      </main>
+      <footer className="marketing-container marketing-footer">
+        <Brand />
+        <p>
+          Easy is meant for parents to teach their children. Easy helps keep
+          their child on track of their education goals.
         </p>
-      </div>
-    </footer>
+        <span>Made for growing together.</span>
+      </footer>
+    </div>
   );
 }
