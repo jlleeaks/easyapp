@@ -341,6 +341,7 @@ export function childProfileForPrompt(child: ChildProfile) {
   void updated_at;
   return {
     ...rest,
+    grade: "Kindergarten",
     // A parent can mark an observation as "don't use this for future activities" —
     // respect that by excluding it from what the model sees, not just from display.
     learning_patterns: (learning_patterns ?? []).filter((p) => p.used_for_personalization !== false),

@@ -32,7 +32,7 @@ const QUESTIONS: Question[] = [
     key: "name",
     group: "YOUR LITTLE LEARNER",
     title: "And your child’s name?",
-    hint: "A first name or nickname is all we need.",
+    hint: "A first name or nickname is all we need. This is our kindergarten learning path.",
     placeholder: "Their name or nickname",
   },
   {

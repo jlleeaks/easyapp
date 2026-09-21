@@ -1,15 +1,11 @@
 import type { Subject } from "@/lib/types";
+import { CA_MATH_UNITS, CA_MATH_SOURCE } from "./california-math";
 
 /**
- * A curated, versioned reference of what kindergartners commonly work toward,
- * used as the fallback framework when a family's specific state/district
- * standards aren't configured. This is hand-authored from the publicly
- * published Common Core State Standards (Mathematics and English Language
- * Arts) — never generated or paraphrased by an AI model at request time.
- *
- * Where no single numbered standard cleanly covers a commonly-taught
- * kindergarten skill (e.g. patterns, writing one's own name), `code` is left
- * null rather than inventing one — see `formalCode` being optional below.
+ * Math uses the source-linked California data in california-math.ts.
+ * Reading and writing retain the existing provisional reference below.
+ * Legacy math entries remain here to preserve historical matching vocabulary;
+ * they are not used as the current curriculum or as a district pacing guide.
  */
 
 export const STANDARDS_FRAMEWORK = {
@@ -39,6 +35,7 @@ export const LEARNING_STATE_DESCRIPTIONS: Record<LearningState, string> = {
 };
 
 export type StandardArea = {
+  sourceUrl?: string;
   id: string;
   subject: Subject;
   domain: string; // formal Common Core domain name
@@ -54,7 +51,7 @@ export type StandardArea = {
 // typical kindergarten year introduces them) so Progress reads as a sequence, not a
 // random list — e.g. math builds from counting through shapes/patterns/measurement up to
 // addition and subtraction, since K.OA problems lean on all of those first.
-export const KINDERGARTEN_STANDARDS: StandardArea[] = [
+const LEGACY_STANDARDS: StandardArea[] = [
   // ---- Math ----
   {
     id: "k-math-counting",
@@ -225,6 +222,16 @@ export const KINDERGARTEN_STANDARDS: StandardArea[] = [
     keywords: ["sentence", "sentences", "story writing", "drawing and labeling"],
     nextGrade: "Write short opinion, informative, and narrative pieces with more independence and detail.",
   },
+];
+
+export const KINDERGARTEN_STANDARDS: StandardArea[] = [
+  ...CA_MATH_UNITS.map((unit): StandardArea => ({
+    id: unit.id, subject: "math", domain: unit.domain, area: unit.title,
+    formalCode: unit.codes.join(", "), officialWording: unit.description,
+    parentWording: unit.description, sourceUrl: CA_MATH_SOURCE,
+    keywords: [...unit.keywords, unit.title.toLowerCase(), ...(LEGACY_STANDARDS.find((area) => area.id === unit.id)?.keywords ?? [])], nextGrade: "Build on these foundations at their pace.",
+  })),
+  ...LEGACY_STANDARDS.filter((area) => area.subject !== "math"),
 ];
 
 export function areasForSubject(subject: Subject): StandardArea[] {

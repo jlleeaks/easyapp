@@ -5,6 +5,7 @@ import type { Briefing, CheckinAnswers, ChildProfile, Subject } from "@/lib/type
 import type { SkillStage } from "@/lib/palette";
 import { normalizeSkillStage } from "@/lib/palette";
 import { deriveHomeworkLearningPatterns } from "@/lib/patterns";
+import { mathUnit } from "@/lib/california-math";
 
 const VALID_SUBJECTS: Subject[] = ["math", "writing", "reading"];
 
@@ -36,6 +37,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing session data." }, { status: 400 });
   }
   const safeSubject: Subject = VALID_SUBJECTS.includes(subject as Subject) ? (subject as Subject) : "math";
+  if (briefing.roadmap_area_id) {
+    const unit = mathUnit(briefing.roadmap_area_id);
+    if (!unit || safeSubject !== "math") return NextResponse.json({ error: "Unknown math area." }, { status: 400 });
+    briefing.skill = unit.title;
+  }
 
   const { data: child, error: childError } = await supabase
     .from("children")

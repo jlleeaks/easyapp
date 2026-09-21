@@ -17,6 +17,7 @@ import {
 import { type AreaRoadmap, nextStepForSubject } from "@/lib/roadmap";
 import type { LearningState } from "@/lib/standards";
 import { TrailGuide } from "./TrailGuide";
+import { CA_MATH_SOURCE, mathUnit } from "@/lib/california-math";
 const LABELS: Record<LearningState, string> = {
   not_yet_observed: "Not yet observed",
   introduced: "Just starting",
@@ -58,7 +59,7 @@ export function RoadmapHome({
     ? `/practice?${new URLSearchParams({ subject, topic: selected.area.area, reason: selected.evidence[0]?.text ?? "Explore this starting point together and tell Easy what you notice." })}`
     : "/practice";
   return (
-    <main className="roadmap-home">
+    <main className="roadmap-home adventure-home">
       <div className="roadmap-topline">
         <span>
           <span className="live-dot" /> YOUR LITTLE DAILY ADVENTURE
@@ -71,11 +72,10 @@ export function RoadmapHome({
         <div>
           <p>Welcome{parentName ? `, ${parentName}` : " back"}.</p>
           <h1>
-            A little progress.
-            <br />A lot of possibility.
+            A little adventure, together.
           </h1>
           <p className="roadmap-subtitle">
-            {childName}’s path, one moment together at a time.
+            A small step for {childName}. A moment for you both.
           </p>
         </div>
         <TrailGuide className="home-guide" />
@@ -156,7 +156,7 @@ export function RoadmapHome({
                       />
                     </span>
                     <span className="stone-copy">
-                      <strong>{item.area.area}</strong>
+                      <strong>{mathUnit(item.area.id)?.short ?? item.area.area}</strong>
                       <span>{LABELS[item.state]}</span>
                     </span>
                     {active && (
@@ -176,10 +176,7 @@ export function RoadmapHome({
               About this learning map <ChevronDown size={15} />
             </summary>
             <p>
-              This is the app’s provisional learning reference. California
-              framework alignment and checkpoint pacing are awaiting review.
-              “Not yet observed” means we need your observations, not that your
-              child cannot do it.
+              {subject === "math" ? <>Math follows <a href={CA_MATH_SOURCE} target="_blank" rel="noreferrer">California’s kindergarten standards</a>, grouped into approachable areas. The path is a suggested sequence, not a school calendar or mastery score.</> : "Reading uses our provisional learning reference."} “Not yet observed” means we need your observations, not that your child cannot do it.
             </p>
           </details>
         </section>
@@ -211,13 +208,14 @@ export function RoadmapHome({
               </span>
               <h2>{selected.area.area}</h2>
               <p>{selected.area.parentWording}</p>
-              <div className="why-this">
-                <strong>Why this step?</strong>
+              <details className="why-this" key={selected.area.id}>
+                <summary>Why this step?</summary>
                 <p>
                   {selected.evidence[0]?.text ??
                     "We haven’t explored this together yet. A gentle first activity will help us find a good starting point."}
                 </p>
-              </div>
+                {selected.area.sourceUrl && <a href={selected.area.sourceUrl} target="_blank" rel="noreferrer">California kindergarten · {selected.area.formalCode}</a>}
+              </details>
               <Link className="easy-button" href={practiceHref}>
                 Prepare tonight’s activity <ArrowRight size={18} />
               </Link>
@@ -232,10 +230,10 @@ export function RoadmapHome({
             </div>
           )}
           {latestMessage && (
-            <article className="learned-card">
-              <span className="section-kicker">WHAT WE’RE ADJUSTING</span>
+            <details className="learned-card">
+              <summary>One thing we’re learning</summary>
               <p>{latestMessage}</p>
-            </article>
+            </details>
           )}
           <article className="learned-card">
             <div className="learned-heading">
@@ -245,13 +243,10 @@ export function RoadmapHome({
               <h3>Uniquely {childName}.</h3>
             </div>
             <p>
-              {summary ||
-                (interests
-                  ? `You told us ${childName} loves ${interests}. We’ll use what you share to help make activities feel familiar.`
-                  : "Every observation helps. Your check-ins will build a picture of what works for your child.")}
+              {interests ? `Inspired by ${interests}. Made for your time together.` : "Little discoveries make the next lesson more personal."}
             </p>
             <Link href="/profile" className="text-link">
-              What we’ve learned <ArrowRight size={16} />
+              {summary ? "Explore their story" : "Get to know their world"} <ArrowRight size={16} />
             </Link>
           </article>
           <Link href="/chat" className="ask-parent">

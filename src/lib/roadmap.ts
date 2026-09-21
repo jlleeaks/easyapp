@@ -57,7 +57,9 @@ export function computeRoadmap(input: {
 
     for (const s of input.sessions) {
       if (s.subject !== area.subject || !s.checkin) continue;
-      const matched = matchAreaByText(area.subject, s.skill);
+      const matched = s.briefing?.roadmap_area_id
+        ? KINDERGARTEN_STANDARDS.find((a) => a.id === s.briefing.roadmap_area_id && a.subject === s.subject)
+        : matchAreaByText(area.subject, s.skill);
       if (matched?.id !== area.id) continue;
       evidence.push({ type: "session", text: s.micro_message ?? `Completed: ${s.skill}`, date: s.created_at, source: s.source });
     }

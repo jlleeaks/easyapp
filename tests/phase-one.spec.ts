@@ -179,6 +179,18 @@ for (const width of [375, 1280])
         page.getByRole("link", { name: "Prepare tonight’s activity" }),
       ).toHaveAttribute("href", /subject=reading/);
       expect(errors).toEqual([]);
+      for (const route of ["progress", "profile"]) {
+        await page.goto(`/${route}`);
+        await expect(page.getByRole("heading", { level: 1 })).toContainText(route === "progress" ? "Look what’s growing." : "Uniquely Maya.");
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+        expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
+        if (route === "progress") {
+          await page.getByRole("button", { name: /Teen numbers/ }).click();
+          await expect(page.getByRole("link", { name: /California standards/ })).toContainText("K.NBT.1");
+          await expect(page.getByRole("link", { name: "Explore this together" })).toHaveAttribute("href", /Teen\+numbers/);
+        }
+        await page.screenshot({ path: `test-results/screenshots/${route}-${width}-${reducedMotion}.png`, fullPage: true });
+      }
     });
   }
 test("existing profile preserves fields outside the shortened questionnaire and surfaces save errors", async ({
@@ -229,4 +241,23 @@ test("existing profile preserves fields outside the shortened questionnaire and 
 test("unauthenticated parents are redirected to login", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page).toHaveURL(/login/);
+});
+
+test("math lesson carries its California target through generation, check-in and the roadmap", async ({ page, context, request }) => {
+  await request.post("http://127.0.0.1:54321/__reset", {data:{child:fixtureChild}});
+  await signIn(context);
+  await page.goto("/practice?subject=math&topic=Teen+numbers");
+  await expect(page.getByRole("link", {name:/California kindergarten math/})).toContainText("K.NBT.1");
+  await page.getByRole("button", {name:"Start the activity", exact:true}).click();
+  await page.getByRole("button", {name:"We're all done",exact:true}).click();
+  for (const choice of ["great","not really","the hands-on approach"]) await page.getByRole("button", {name:choice,exact:true}).click();
+  await page.getByRole("button", {name:"Done",exact:true}).click();
+  await expect(page.getByText("Objects helped. Next time, start with a group of ten.", {exact:true})).toBeVisible();
+  const saved = await (await request.get("http://127.0.0.1:54321/__state")).json();
+  expect(saved.sessions[0].briefing.roadmap_area_id).toBe("k-math-teen-numbers");
+  expect(saved.skills[0].skill_name).toBe("Teen numbers");
+  expect(saved.modelRequests[0].system).toContain("K.NBT.1");
+  await page.goto("/dashboard");
+  await expect(page.getByRole("button", {name:"Teen numbers: Getting there. Show activity."})).toBeVisible();
+  await expect(page.getByRole("button", {name:"Counting and numbers: Not yet observed. Show activity."})).toBeVisible();
 });

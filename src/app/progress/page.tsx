@@ -1,64 +1,51 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/ui/Shell";
-import { ProgressTabs } from "@/components/progress/ProgressTabs";
-import { RoadmapHeader } from "@/components/progress/RoadmapHeader";
-import { computeRoadmap, type AreaRoadmap } from "@/lib/roadmap";
-import { SUBJECTS } from "@/lib/subjects";
-import type { ChildProfile, Session, Skill, Subject } from "@/lib/types";
-
+import { GrowthGarden } from "@/components/easy/GrowthGarden";
+import { computeRoadmap } from "@/lib/roadmap";
+import type { ChildProfile, Session, Skill } from "@/lib/types";
 export default async function ProgressPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-
-  const { data: child } = await supabase
+  const { data: child, error } = await supabase
     .from("children")
     .select("*")
     .eq("parent_id", user.id)
     .limit(1)
     .maybeSingle<ChildProfile>();
+  if (error)
+    throw new Error("We couldn’t load your progress. Please try again.");
   if (!child) redirect("/onboarding");
-
-  const { data: skills } = await supabase
-    .from("skills")
-    .select("*")
-    .eq("child_id", child.id)
-    .returns<Skill[]>();
-
-  const { data: sessions } = await supabase
-    .from("sessions")
-    .select("*")
-    .eq("child_id", child.id)
-    .order("created_at", { ascending: false })
-    .returns<Session[]>();
-
-  const dates = (sessions ?? []).map((s) => s.created_at);
-
+  const [skills, sessions] = await Promise.all([
+    supabase
+      .from("skills")
+      .select("*")
+      .eq("child_id", child.id)
+      .returns<Skill[]>(),
+    supabase
+      .from("sessions")
+      .select("*")
+      .eq("child_id", child.id)
+      .order("created_at", { ascending: false })
+      .returns<Session[]>(),
+  ]);
+  if (skills.error || sessions.error)
+    throw new Error("We couldn’t load your learning story. Please try again.");
   const roadmap = computeRoadmap({
-    skills: skills ?? [],
-    sessions: sessions ?? [],
+    skills: skills.data ?? [],
+    sessions: sessions.data ?? [],
     strengths: child.strengths ?? [],
     growthAreas: child.growth_areas ?? [],
   });
-
-  const areasBySubject = {} as Record<Subject, AreaRoadmap[]>;
-  for (const s of SUBJECTS) {
-    areasBySubject[s.key] = roadmap.filter((r) => r.area.subject === s.key);
-  }
-
   return (
     <Shell wide>
-      <RoadmapHeader childName={child.name} roadmap={roadmap} />
-
-      <ProgressTabs
+      <GrowthGarden
         childName={child.name}
-        areasBySubject={areasBySubject}
-        patterns={child.learning_patterns ?? []}
-        sessions={sessions ?? []}
-        dates={dates}
+        roadmap={roadmap}
+        sessions={sessions.data ?? []}
       />
     </Shell>
   );

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { buildPracticeSystem, callClaudeJSON, childProfileForPrompt } from "@/lib/anthropic";
 import type { Briefing, ChildProfile, Subject } from "@/lib/types";
+import { mathUnit, CA_MATH_FRAMEWORK } from "@/lib/california-math";
 
 const VALID_SUBJECTS: Subject[] = ["math", "writing", "reading"];
 
@@ -15,7 +16,8 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { childId, subject, topic, reason } = body as {
+  const { childId, subject, topic, reason, areaId } = body as {
+    areaId?: string;
     childId: string;
     subject: string;
     topic: string;
@@ -26,6 +28,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing topic." }, { status: 400 });
   }
   const safeSubject: Subject = VALID_SUBJECTS.includes(subject as Subject) ? (subject as Subject) : "math";
+  const unit = safeSubject === "math" ? mathUnit(areaId) : undefined;
+  if (areaId && !unit) return NextResponse.json({ error: "Unknown math area." }, { status: 400 });
 
   const { data: child, error: childError } = await supabase
     .from("children")
@@ -40,7 +44,7 @@ export async function POST(request: Request) {
 
   try {
     const briefing = await callClaudeJSON<Briefing>({
-      system: buildPracticeSystem(safeSubject),
+      system: buildPracticeSystem(safeSubject) + (unit ? `\nTarget ${CA_MATH_FRAMEWORK}: ${unit.codes.join(", ")}. Skill: ${unit.description} Keep the activity within these boundaries. Focus on one small part; completing a lesson does not mean mastering all these standards.` : ""),
       userContent: [
         {
           type: "text",
@@ -54,7 +58,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Couldn't build that lesson — try again." }, { status: 502 });
     }
 
-    return NextResponse.json({ briefing });
+    return NextResponse.json({ briefing: { ...briefing, ...(unit ? { skill: unit.title, roadmap_area_id: unit.id } : {}) } });
   } catch {
     return NextResponse.json(
       { error: "Something went wrong building tonight's lesson. Try again." },
