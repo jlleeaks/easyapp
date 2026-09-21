@@ -1,0 +1,583 @@
+/* Parent learning spaces: a path, a garden, a portrait. */
+.journey-page,
+.adventure-home {
+  max-width: 1080px;
+  margin: auto;
+  color: #2b3648;
+}
+.journey-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+.journey-heading h1,
+.adventure-home .roadmap-welcome h1 {
+  font-size: clamp(30px, 3.6vw, 44px);
+  line-height: 1.08;
+  font-weight: 750;
+  letter-spacing: -1px;
+}
+.journey-heading p {
+  color: #586579;
+  margin-top: 12px;
+  max-width: 440px;
+}
+.journey-heading > svg {
+  width: 110px;
+  flex-shrink: 0;
+}
+.journey-page h2 {
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.journey-page h3 {
+  font-size: 20px;
+  font-weight: 650;
+}
+.journey-page a:not(.easy-button) {
+  color: #205ca6;
+}
+.journey-page button:focus-visible,
+.journey-page a:focus-visible,
+.journey-page summary:focus-visible {
+  outline: 3px solid #2368c1;
+  outline-offset: 5px;
+}
+.journey-page p {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.journey-details {
+  margin: 16px 0;
+  border-bottom: 1px solid #dce5d7;
+  padding: 10px 0 18px;
+}
+.journey-details summary,
+.portrait-note summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+  font-weight: 600;
+}
+.journey-details > p {
+  white-space: pre-line;
+  color: #586579;
+  margin: 12px 0;
+}
+.journey-footnote {
+  font-size: 12px;
+  color: #586579;
+  text-align: center;
+  margin: 32px auto;
+  max-width: 560px;
+}
+.garden-switch {
+  max-width: 320px;
+  margin-bottom: 22px;
+}
+.growth-garden {
+  position: relative;
+  border-radius: 36px;
+  background: linear-gradient(#edf5ff 0%, #f3f8ed 65%);
+  padding: 20px 24px 28px;
+  overflow: hidden;
+}
+.garden-sky {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 70px;
+  color: #946700;
+  font-size: 30px;
+}
+.garden-sky span:first-child {
+  font-size: 60px;
+  color: #b77900;
+}
+.garden-plants {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.garden-plant {
+  position: relative;
+  border-radius: 24px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  min-height: 190px;
+  text-align: center;
+  border: 2px solid transparent;
+  transition:
+    transform 180ms,
+    background 180ms;
+}
+.garden-plant:hover {
+  transform: translateY(-4px);
+  background: #ffffff80;
+}
+.garden-plant[aria-pressed="true"] {
+  background: #fff;
+  border-color: #2368c1;
+}
+.plant-art {
+  height: 100px;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  color: #257c4b;
+  position: relative;
+  width: 110px;
+  padding-bottom: 12px;
+}
+.plant-art:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 90px;
+  height: 16px;
+  background: #cbdfb5;
+  border-radius: 50%;
+  z-index: 0;
+}
+.plant-art svg {
+  z-index: 1;
+}
+.plant-bloom .plant-art {
+  color: #946700;
+}
+.garden-plant strong {
+  font-size: 16px;
+  margin-top: 12px;
+  line-height: 1.15;
+}
+.garden-plant small {
+  color: #586579;
+  margin-top: 6px;
+}
+.garden-caption {
+  text-align: center;
+  font-size: 13px;
+  color: #586579;
+  margin: 24px 0 0;
+}
+.journey-reveal {
+  padding: 26px;
+  border: 2px solid #dce9d5;
+  border-radius: 24px;
+  margin-top: 18px;
+  background: white;
+}
+.journey-reveal p {
+  margin: 10px 0;
+  color: #586579;
+}
+.journey-reveal > a {
+  display: flex;
+  margin-top: 16px;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 13px;
+}
+.journey-moments {
+  margin: 36px auto;
+  max-width: 700px;
+}
+.journey-moments h2 {
+  margin-bottom: 20px;
+}
+.memory-card {
+  display: flex;
+  gap: 20px;
+  padding: 22px 0;
+  border-bottom: 1px solid #dce5d7;
+  align-items: start;
+}
+.memory-card p {
+  color: #586579;
+  font-size: 14px;
+  margin-top: 6px;
+}
+.memory-card small {
+  color: #586579;
+  font-size: 12px;
+}
+.memory-stamp {
+  display: grid;
+  place-items: center;
+  background: #edf4e6;
+  color: #257c4b;
+  min-width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  transform: rotate(-7deg);
+}
+.portrait-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.portrait-scene {
+  text-align: center;
+  background: #f0f5e8;
+  border-radius: 36px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.portrait-halo {
+  width: 180px;
+  height: 180px;
+  background: #fff9df;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+}
+.portrait-halo svg {
+  width: 180px;
+}
+.portrait-grade {
+  display: inline-block;
+  color: #4e6242;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.interest-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+.interest-bubbles > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 99px;
+  background: #fff;
+  padding: 10px 18px;
+  font-size: 14px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.portrait-spark {
+  position: absolute;
+  font-size: 44px;
+  color: #946700;
+}
+.spark-one {
+  top: 40px;
+  left: 20%;
+  transform: rotate(-12deg);
+}
+.spark-two {
+  top: 80px;
+  right: 22%;
+}
+.portrait-notes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin: 24px 0;
+}
+.portrait-note {
+  border-radius: 24px;
+  padding: 24px;
+  min-width: 0;
+}
+.portrait-note > svg {
+  margin-bottom: 20px;
+}
+.portrait-note h2 {
+  font-size: 22px;
+  margin: 8px 0 14px;
+}
+.portrait-note p {
+  font-size: 15px;
+}
+.portrait-note details {
+  margin-top: 12px;
+  font-size: 13px;
+}
+.note-green {
+  background: #eaf3e5;
+}
+.note-yellow {
+  background: #fff4d0;
+}
+.note-blue {
+  background: #eaf2fd;
+}
+.portrait-learning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 0;
+}
+.portrait-learning p {
+  max-width: 430px;
+  margin-top: 10px;
+  color: #586579;
+}
+.adventure-home .roadmap-topline {
+  display: none;
+}
+.adventure-home .roadmap-welcome {
+  margin-bottom: 24px;
+  align-items: center;
+}
+.adventure-home .home-guide {
+  width: 100px;
+  margin: 0;
+}
+.adventure-home .roadmap-layout {
+  grid-template-columns: minmax(0, 1.25fr) minmax(290px, 0.85fr);
+  align-items: start;
+  gap: 28px;
+}
+.adventure-home .learning-map {
+  padding: 26px;
+  background: #f0f5e8;
+  border: 0;
+  border-radius: 32px;
+}
+.adventure-home .learning-stones {
+  max-width: 400px;
+  margin: 25px auto;
+  position: relative;
+  padding: 0;
+}
+.adventure-home .learning-stones:before {
+  display: none;
+}
+.adventure-home .learning-stone {
+  margin: 0;
+  min-height: 132px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+.adventure-home .learning-stone:after {
+  content: "";
+  position: absolute;
+  border-left: 4px dotted #c1d3ad;
+  top: 78px;
+  height: 70px;
+  left: 50%;
+  transform: rotate(-35deg);
+  transform-origin: top;
+  pointer-events: none;
+}
+.adventure-home .learning-stone:nth-child(2n):after {
+  transform: rotate(35deg);
+}
+.adventure-home .learning-stone:last-child:after {
+  display: none;
+}
+.adventure-home .stone-offset-1,
+.adventure-home .stone-offset-2,
+.adventure-home .stone-offset-3 {
+  margin-left: 0;
+}
+.adventure-home .stone-button {
+  width: 190px;
+  flex-direction: column;
+  gap: 9px;
+  text-align: center;
+  padding: 6px;
+  z-index: 1;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 24px;
+  transform: translateX(-44px);
+}
+.adventure-home .learning-stone:nth-child(2n) .stone-button {
+  transform: translateX(44px);
+}
+.adventure-home .stone-circle {
+  width: 70px;
+  height: 65px;
+  border-width: 5px;
+  transition: transform 180ms;
+}
+.adventure-home .stone-button:hover .stone-circle {
+  transform: translateY(-4px);
+}
+.adventure-home .stone-selected .stone-circle {
+  outline: 3px solid #2368c1;
+  outline-offset: 5px;
+}
+.adventure-home .stone-copy strong {
+  font-size: 16px;
+  max-width: 190px;
+}
+.adventure-home .you-are-here {
+  display: none;
+}
+.adventure-home .stone-selected .stone-copy strong {
+  color: #205ca6;
+}
+.adventure-home .roadmap-sidebar {
+  position: sticky;
+  top: 0;
+  gap: 14px;
+}
+.adventure-home .tonight-card {
+  padding: 22px;
+  border-radius: 28px;
+}
+.adventure-home .tonight-card h2 {
+  font-size: 28px;
+  line-height: 1.12;
+  margin: 16px 0 12px;
+}
+.adventure-home .tonight-card > p {
+  font-size: 14px;
+}
+.adventure-home .tonight-illustration {
+  height: 115px;
+  margin: 16px 0;
+}
+.adventure-home .tonight-illustration > svg {
+  width: 130px;
+}
+.adventure-home .why-this {
+  padding: 0;
+  background: none;
+  margin: 14px 0;
+}
+.adventure-home .why-this summary,
+.adventure-home .learned-card summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+.adventure-home .why-this a {
+  display: block;
+  color: #205ca6;
+  padding: 10px 0;
+  text-decoration: underline;
+  font-size: 12px;
+}
+.adventure-home .learned-card {
+  padding: 12px 20px;
+  background: transparent;
+  border: 0;
+}
+.adventure-home .learned-card p {
+  font-size: 13px;
+}
+.adventure-home .reference-note a {
+  text-decoration: underline;
+}
+@media (max-width: 1000px) {
+  .portrait-notes {
+    grid-template-columns: 1fr;
+  }
+  .adventure-home .roadmap-layout {
+    grid-template-columns: 1fr;
+  }
+  .adventure-home .roadmap-sidebar {
+    position: static;
+    grid-row: auto;
+  }
+  .adventure-home .learning-map {
+    max-width: none;
+  }
+  .adventure-home .roadmap-welcome h1 {
+    font-size: 34px;
+  }
+  .adventure-home .home-guide {
+    width: 80px;
+  }
+  .adventure-home .tonight-card {
+    scroll-margin-top: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .journey-heading {
+    gap: 10px;
+    align-items: start;
+  }
+  .journey-heading > svg {
+    width: 70px;
+  }
+  .journey-heading h1 {
+    font-size: 32px;
+  }
+  .journey-heading p {
+    font-size: 14px;
+  }
+  .growth-garden {
+    padding: 12px;
+    border-radius: 28px;
+  }
+  .garden-plants {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .garden-plant {
+    padding: 6px;
+    min-height: 184px;
+  }
+  .garden-plant strong {
+    font-size: 14px;
+  }
+  .portrait-learning {
+    display: block;
+  }
+  .portrait-learning > div {
+    margin-bottom: 18px;
+  }
+  .portrait-edit {
+    font-size: 12px;
+    white-space: normal;
+  }
+  .portrait-scene {
+    padding: 20px 12px;
+  }
+  .spark-one {
+    left: 5%;
+  }
+  .spark-two {
+    right: 8%;
+  }
+  .adventure-home .learning-map {
+    padding: 20px 12px;
+  }
+  .adventure-home .roadmap-welcome h1 {
+    font-size: 30px;
+  }
+  .adventure-home .stone-button {
+    width: 160px;
+    transform: translateX(-32px);
+  }
+  .adventure-home .learning-stone:nth-child(2n) .stone-button {
+    transform: translateX(32px);
+  }
+  .adventure-home .roadmap-subtitle {
+    font-size: 13px;
+  }
+  .adventure-home .home-guide {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .garden-plant,
+  .adventure-home .stone-circle {
+    transition: none;
+  }
+  .garden-plant:hover {
+    transform: none;
+  }
+}

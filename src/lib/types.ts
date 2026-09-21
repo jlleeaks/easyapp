@@ -105,6 +105,7 @@ export const EMPTY_CHILD_PROFILE: ChildProfileInput = {
 export type Subject = "math" | "writing" | "reading";
 
 export type Briefing = {
+  roadmap_area_id?: string;
   skill: string;
   why_it_matters: string;
   is_new_concept: boolean;

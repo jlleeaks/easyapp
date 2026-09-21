@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2 } from "next/font/google";
 import "./globals.css";
+import "./journey.css";
 const baloo = Baloo_2({
   variable: "--font-baloo",
   subsets: ["latin"],

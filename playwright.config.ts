@@ -27,6 +27,8 @@ export default defineConfig({
       url: "http://localhost:3000",
       reuseExistingServer: false,
       env: {
+        ANTHROPIC_API_KEY: "fixture-only-not-a-real-key",
+        ANTHROPIC_BASE_URL: "http://127.0.0.1:54321",
         NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",
         NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key-not-a-real-credential",
       },

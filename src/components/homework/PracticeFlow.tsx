@@ -20,6 +20,7 @@ import { CompactBriefingView } from "@/components/homework/CompactBriefingView";
 import { BriefingSkeleton } from "@/components/homework/BriefingSkeleton";
 import { StateMarker } from "@/components/ui/StateMarker";
 import { matchAreaByText } from "@/lib/standards";
+import { mathUnit, CA_MATH_SOURCE } from "@/lib/california-math";
 import type { AreaRoadmap } from "@/lib/roadmap";
 import type { Briefing, CheckinAnswers, Subject } from "@/lib/types";
 
@@ -110,7 +111,7 @@ export function PracticeFlow({
       const res = await fetch("/api/practice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ childId, subject: sub, topic, reason: why }),
+        body: JSON.stringify({ childId, subject: sub, topic, reason: why, areaId: sub === "math" ? matchAreaByText(sub, topic)?.id : undefined }),
       });
       const data = await res.json();
       if (!res.ok || !data.briefing) {
@@ -257,6 +258,7 @@ export function PracticeFlow({
   if (step === "briefing" && briefing) {
     return (
       <div className="animate-fade-in-up">
+        {mathUnit(briefing.roadmap_area_id) && <p className="mb-4 text-sm"><a className="underline" href={CA_MATH_SOURCE} target="_blank" rel="noreferrer">California kindergarten math · {mathUnit(briefing.roadmap_area_id)!.codes.join(", ")}</a></p>}
         <div className="flex justify-end mb-2">
           <button
             onClick={() => setFullBriefing((v) => !v)}
@@ -343,7 +345,8 @@ export function PracticeFlow({
   }
 
   if (step === "iteration") {
-    const matchedArea = matchAreaByText(subject, briefing?.skill ?? focus);
+    const unit = mathUnit(briefing?.roadmap_area_id);
+    const matchedArea = matchAreaByText(subject, unit?.title ?? briefing?.skill ?? focus);
     const matchedItem = matchedArea ? (roadmap.find((r) => r.area.id === matchedArea.id) ?? null) : null;
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in-up">
